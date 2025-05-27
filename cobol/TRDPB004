@@ -1,0 +1,822 @@
+000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. TRDPB004.                                            00020042
+000300***************************************************************** 00030001
+000400*                                                               * 00040001
+000500* TRDPB004 : Exception, Execution Statistics, Customer Summary  * 00050043
+000600*            Reports                                            * 00060043
+000610*                                                               * 00061043
+001300*                                                               * 00130001
+001400***************************************************************** 00140001
+001500 ENVIRONMENT DIVISION.                                            00150001
+001510*                                                               * 00151043
+001520 INPUT-OUTPUT SECTION.                                            00152043
+001530 FILE-CONTROL.                                                    00153043
+001540      SELECT RUNLOG-REPORT                                        00154043
+001550             ASSIGN TO RUNLOG                                     00155043
+001560             FILE STATUS  IS RUNLOG-FILE-STATUS.                  00156043
+001570                                                                  00157043
+001571      SELECT SUMMARY-REPORT                                       00157143
+001572             ASSIGN TO SUMMARY                                    00157243
+001573             FILE STATUS  IS SUMMARY-FILE-STATUS.                 00157343
+001574                                                                  00157443
+001580      SELECT EXCPTION-REPORT                                      00158045
+001590             ASSIGN TO EXCPTION                                   00159045
+001591             FILE STATUS  IS EXCPTION-FILE-STATUS.                00159143
+001592                                                                  00159243
+001600 DATA DIVISION.                                                   00160001
+001610*                                                               * 00161043
+001611 FILE SECTION.                                                    00161143
+001612*                                                                 00161243
+001613 FD  RUNLOG-REPORT                                                00161343
+001614        RECORD CONTAINS 90 CHARACTERS                             00161450
+001615        RECORDING MODE IS F                                       00161543
+001616        DATA RECORD IS RUNLOG-RECORD                              00161643
+001617        BLOCK CONTAINS 0 RECORDS.                                 00161743
+001618 01  RUNLOG-RECORD              PIC X(90).                        00161850
+001619*                                                                 00161943
+001620 FD  SUMMARY-REPORT                                               00162043
+001621        RECORD CONTAINS 140 CHARACTERS                            00162150
+001622        RECORDING MODE IS F                                       00162243
+001623        DATA RECORD IS SUMMARY-RECORD                             00162343
+001624        BLOCK CONTAINS 0 RECORDS.                                 00162443
+001625 01  SUMMARY-RECORD             PIC X(140).                       00162550
+001626*                                                                 00162643
+001627 FD  EXCPTION-REPORT                                              00162743
+001628        RECORD CONTAINS 1100 CHARACTERS                           00162845
+001629        RECORDING MODE IS F                                       00162943
+001630        DATA RECORD IS EXCPTION-RECORD                            00163043
+001631        BLOCK CONTAINS 0 RECORDS.                                 00163143
+001632 01  EXCPTION-RECORD            PIC X(1100).                      00163243
+001640*                                                               * 00164043
+001700 WORKING-STORAGE SECTION.                                         00170001
+001800*                                                                 00180001
+001810 01  WS-SQLCODE                 PIC -(4).                         00181045
+001900 01  WS-FILE-STATUS.                                              00190043
+002000     05 RUNLOG-FILE-STATUS      PIC 9(2).                         00200043
+002100     05 SUMMARY-FILE-STATUS     PIC 9(2).                         00210043
+002200     05 EXCPTION-FILE-STATUS    PIC 9(2).                         00220043
+003100*                                                                 00310046
+003200 01  WS-PROG-ERROR-MSGS.                                          00320046
+003300     05  WS-EXCEPTION            PIC X(200).                      00330046
+003310*                                                                 00331046
+003400 01  WS-SWITCHES.                                                 00340001
+003620     05  WS-NO-MORE-EXCP-RECS-SW  PIC  X(01) VALUE SPACES.        00362043
+003621         88  NO-MORE-EXCP-RECORDS    VALUE 'Y'.                   00362104
+003622     05  WS-NO-MORE-RUNLOG-RECS-SW PIC X(01) VALUE SPACES.        00362243
+003623         88  NO-MORE-RUNLOG-RECORDS  VALUE 'Y'.                   00362343
+003624     05  WS-NO-MORE-SUMMARY-RECS-SW PIC X(01) VALUE SPACES.       00362443
+003625         88  NO-MORE-SUMMARY-RECORDS VALUE 'Y'.                   00362543
+007101*                                                                 00710127
+007110 01  HDR-RUNLOG-REC-DASH.                                         00711050
+007111     05 FILLER     PIC X(2) VALUE '+-'.                           00711150
+007120     05 FILLER1    PIC X(12).                                     00712050
+007121     05 FILLER     PIC X(3) VALUE '-+-'.                          00712153
+007130     05 FILLER2    PIC X(8).                                      00713050
+007131     05 FILLER     PIC X(3) VALUE '-+-'.                          00713153
+007140     05 FILLER3    PIC X(26).                                     00714050
+007141     05 FILLER     PIC X(3) VALUE '-+-'.                          00714153
+007142     05 FILLER4    PIC X(26).                                     00714250
+007193     05 FILLER     PIC X(3) VALUE '-+ '.                          00719350
+007194 01  HDR-RUNLOG-REC.                                              00719450
+007195     05 FILLER     PIC X(2) VALUE '| '.                           00719550
+007196     05 FILLER     PIC X(12) VALUE 'TRANSACTION'.                 00719650
+007197     05 FILLER     PIC X(3) VALUE ' | '.                          00719750
+007198     05 FILLER     PIC X(8) VALUE 'CURRENCY'.                     00719850
+007199     05 FILLER     PIC X(3) VALUE ' | '.                          00719950
+007200     05 FILLER     PIC X(26) VALUE 'START TIMESTAMP'.             00720050
+007201     05 FILLER     PIC X(3) VALUE ' | '.                          00720150
+007202     05 FILLER     PIC X(26) VALUE 'END TIMESTAMP'.               00720250
+007203     05 FILLER     PIC X(3) VALUE ' | '.                          00720350
+007210*                                                                 00721028
+007220 01  PRT-RUNLOG-REC.                                              00722043
+007230     05 FILLER                    PIC X(2) VALUE '| '.            00723028
+007240     05 PRT-RUNLOG-TRANSACTION    PIC X(12).                      00724043
+007250     05 FILLER                    PIC X(3) VALUE ' | '.           00725028
+007260     05 PRT-RUNLOG-CURRENCY       PIC X(8).                       00726043
+007270     05 FILLER                    PIC X(3) VALUE ' | '.           00727028
+007280     05 PRT-RUNLOG-START-TS       PIC X(26).                      00728043
+007290     05 FILLER                    PIC X(3) VALUE ' | '.           00729028
+007291     05 PRT-RUNLOG-END-TS         PIC X(26).                      00729143
+007292     05 FILLER                    PIC X(3) VALUE ' | '.           00729243
+007293*                                                                 00729343
+007294 01  HDR-EXCPTION-REC-DASH.                                       00729450
+007295     05 FILLER     PIC X(2) VALUE '+-'.                           00729550
+007298     05 FILLER1    PIC X(20).                                     00729858
+007299     05 FILLER     PIC X(3) VALUE '-+-'.                          00729953
+007300     05 FILLER2    PIC X(1000).                                   00730058
+007301     05 FILLER     PIC X(3) VALUE '-+ '.                          00730150
+007304*                                                                 00730443
+007305 01  HDR-EXCPTION-REC.                                            00730550
+007306     05 FILLER     PIC X(2) VALUE '| '.                           00730650
+007309     05 FILLER     PIC X(20) VALUE 'EXCEPTION TYPE'.              00730950
+007310     05 FILLER     PIC X(3) VALUE ' | '.                          00731050
+007311     05 FILLER     PIC X(1000) VALUE 'DESCRIPTION'.               00731150
+007312     05 FILLER     PIC X(3) VALUE ' | '.                          00731250
+007313*                                                                 00731350
+007314 01  PRT-EXCPTION-REC.                                            00731450
+007315     05 FILLER                    PIC X(2) VALUE '| '.            00731550
+007318     05 PRT-EXCPTION-TYPE         PIC X(20).                      00731850
+007319     05 FILLER                    PIC X(3) VALUE ' | '.           00731950
+007320     05 PRT-EXCPTION-DESC         PIC X(1000).                    00732050
+007321     05 FILLER                    PIC X(3) VALUE ' | '.           00732150
+007322*                                                                 00732250
+007323 01  HDR-SUMMARY-REC-DASH.                                        00732350
+007324     05 FILLER     PIC X(2) VALUE '+-'.                           00732450
+007325     05 FILLER1    PIC X(12).                                     00732550
+007326     05 FILLER     PIC X(3) VALUE ' + '.                          00732653
+007327     05 FILLER2    PIC X(11).                                     00732750
+007328     05 FILLER     PIC X(3) VALUE ' + '.                          00732853
+007329     05 FILLER3    PIC X(11).                                     00732950
+007330     05 FILLER     PIC X(3) VALUE ' + '.                          00733053
+007331     05 FILLER4    PIC X(11).                                     00733150
+007340     05 FILLER     PIC X(3) VALUE ' + '.                          00734053
+007350     05 FILLER5    PIC X(08).                                     00735050
+007360     05 FILLER     PIC X(3) VALUE ' + '.                          00736053
+007370     05 FILLER6    PIC X(14).                                     00737050
+007380     05 FILLER     PIC X(4) VALUE ' +  '.                         00738053
+007390     05 FILLER7    PIC X(14).                                     00739050
+007400     05 FILLER     PIC X(4) VALUE ' +  '.                         00740053
+007500     05 FILLER8    PIC X(14).                                     00750050
+007501     05 FILLER     PIC X(3) VALUE ' + '.                          00750153
+007502     05 FILLER9    PIC X(14).                                     00750250
+007503     05 FILLER     PIC X(3) VALUE ' + '.                          00750353
+007504*                                                                 00750450
+007505 01  HDR-SUMMARY-REC.                                             00750550
+007506     05 FILLER     PIC X(2) VALUE '| '.                           00750650
+007507     05 FILLER     PIC X(12) VALUE 'CUSTOMER'.                    00750750
+007508     05 FILLER     PIC X(3) VALUE ' | '.                          00750850
+007509     05 FILLER     PIC X(11) VALUE 'OVERDUE' JUST RIGHT.          00750950
+007510     05 FILLER     PIC X(3) VALUE ' | '.                          00751050
+007511     05 FILLER     PIC X(11) VALUE 'REJECTED' JUST RIGHT.         00751150
+007512     05 FILLER     PIC X(3) VALUE ' | '.                          00751250
+007513     05 FILLER     PIC X(11) VALUE 'SETTLED' JUST RIGHT.          00751350
+007514     05 FILLER     PIC X(3) VALUE ' | '.                          00751450
+007515     05 FILLER     PIC X(08) VALUE 'CURRENCY'.                    00751550
+007516     05 FILLER     PIC X(3) VALUE ' | '.                          00751650
+007517     05 FILLER     PIC X(14) VALUE 'OPEN BALANCE' JUST RIGHT.     00751750
+007518     05 FILLER     PIC X(4) VALUE ' |  '.                         00751850
+007519     05 FILLER     PIC X(14) VALUE 'DEBITS ' JUST RIGHT.          00751950
+007520     05 FILLER     PIC X(4) VALUE ' |  '.                         00752050
+007521     05 FILLER     PIC X(14) VALUE 'CREDITS' JUST RIGHT.          00752150
+007522     05 FILLER     PIC X(3) VALUE ' | '.                          00752250
+007523     05 FILLER     PIC X(14) VALUE 'CLOSE BALANCE' JUST RIGHT.    00752350
+007524     05 FILLER     PIC X(3) VALUE ' | '.                          00752450
+007525*                                                                 00752550
+007526 01  PRT-SUMMARY-REC.                                             00752650
+007527     05 FILLER                    PIC X(2) VALUE '| '.            00752750
+007528     05 PRT-SUMMARY-CUSTOMER-ID   PIC X(12).                      00752850
+007529     05 FILLER                    PIC X(3) VALUE ' | '.           00752950
+007530     05 PRT-SUMMARY-OVERDUE       PIC ZZZ,ZZZ,ZZ9.                00753050
+007531     05 FILLER                    PIC X(3) VALUE ' | '.           00753150
+007532     05 PRT-SUMMARY-REJECTED      PIC ZZZ,ZZZ,ZZ9.                00753250
+007533     05 FILLER                    PIC X(3) VALUE ' | '.           00753350
+007534     05 PRT-SUMMARY-SETTLED       PIC ZZZ,ZZZ,ZZ9.                00753450
+007535     05 FILLER                    PIC X(3) VALUE ' | '.           00753550
+007536     05 PRT-SUMMARY-CURRENCY      PIC X(08).                      00753650
+007537     05 FILLER                    PIC X(3) VALUE ' | '.           00753754
+007539     05 PRT-SUMMARY-OPEN-BALANCE  PIC ---,---,--9.99.             00753950
+007540     05 FILLER                    PIC X(4) VALUE ' | -'.          00754050
+007541     05 PRT-SUMMARY-TOTAL-DEBIT   PIC ---,---,--9.99.             00754150
+007542     05 FILLER                    PIC X(4) VALUE ' | +'.          00754250
+007543     05 PRT-SUMMARY-TOTAL-CREDIT  PIC ---,---,--9.99.             00754350
+007544     05 FILLER                    PIC X(3) VALUE ' | '.           00754450
+007545     05 PRT-SUMMARY-CLOSE-BALANCE PIC ---,---,--9.99.             00754550
+007546     05 FILLER                    PIC X(3) VALUE ' | '.           00754650
+007550*                                                                 00755050
+007600     EXEC SQL                                                     00760005
+007700         INCLUDE SQLCA                                            00770006
+007800     END-EXEC                                                     00780005
+007900*                                                                 00790006
+008000     EXEC SQL                                                     00800006
+008100         INCLUDE TBTRDEXC                                         00810043
+008200     END-EXEC                                                     00820006
+008600*                                                                 00860001
+008700     EXEC SQL                                                     00870043
+008800         INCLUDE TBTRDSUM                                         00880043
+008900     END-EXEC                                                     00890043
+009000*                                                                 00900043
+009100     EXEC SQL                                                     00910043
+009200         INCLUDE TBTRDLOG                                         00920043
+009210     END-EXEC                                                     00921043
+009220*                                                                 00922043
+009221     EXEC SQL                                                     00922143
+009222          DECLARE EXCPTION_CURSOR CURSOR WITH HOLD FOR            00922243
+009224          SELECT  EXC_TYPE                                        00922456
+009225                 ,EXC_DESCRIPTION                                 00922543
+009226            FROM TBTRDEXC                                         00922643
+009229          ORDER BY EXC_TYPE ASC, EXC_DESCRIPTION ASC              00922955
+009231     END-EXEC                                                     00923143
+009232*         WITH UR                                                 00923259
+009240*                                                                 00924043
+009250     EXEC SQL                                                     00925043
+009260          DECLARE SUMMARY_CURSOR CURSOR WITH HOLD FOR             00926043
+009270          SELECT  SUM_CUSTOMER_ID                                 00927043
+009280                 ,SUM_OVERDUE                                     00928043
+009290                 ,SUM_REJECTED                                    00929043
+009291                 ,SUM_SETTLED                                     00929143
+009292                 ,SUM_CURRENCY                                    00929243
+009293                 ,SUM_OPEN_BALANCE                                00929343
+009294                 ,SUM_TOTAL_DEBIT                                 00929443
+009295                 ,SUM_TOTAL_CREDIT                                00929543
+009296                 ,SUM_CLOSE_BALANCE                               00929643
+009303            FROM TBTRDSUM                                         00930343
+009304          ORDER BY SUM_CUSTOMER_ID ASC                            00930443
+009306     END-EXEC                                                     00930643
+009307*                                                                 00930743
+009308     EXEC SQL                                                     00930843
+009309          DECLARE RUNLOG_CURSOR CURSOR WITH HOLD FOR              00930943
+009310          SELECT  LOG_TRANSACTION                                 00931043
+009311                 ,LOG_CURRENCY                                    00931143
+009312                 ,LOG_START_TS                                    00931243
+009313                 ,LOG_END_TS                                      00931343
+009319            FROM TBTRDLOG                                         00931943
+009320          ORDER BY LOG_TRANSACTION ASC, LOG_CURRENCY ASC          00932043
+009321     END-EXEC                                                     00932143
+009322*                                                                 00932243
+009330 PROCEDURE DIVISION.                                              00933043
+009400                                                                  00940001
+009500 0000-MAINLINE.                                                   00950001
+011652                                                                  01165204
+011653     PERFORM 0001-INITIALIZE                                      01165351
+011654        THRU 0001-EXIT                                            01165451
+011658                                                                  01165850
+011659     PERFORM 1000-PROCESS-EXCEPTION                               01165904
+011660        THRU 1000-EXIT                                            01166004
+012000                                                                  01200001
+012030     PERFORM 2000-PROCESS-TIMINGS                                 01203034
+012040        THRU 2000-EXIT                                            01204034
+012050                                                                  01205034
+012060     PERFORM 3000-PROCESS-SUMMARY-RPT                             01206034
+012070        THRU 3000-EXIT                                            01207034
+012080                                                                  01208034
+012091     PERFORM 4000-CLEANUP                                         01209143
+012092        THRU 4000-EXIT                                            01209243
+012093                                                                  01209343
+012094     MOVE 0 TO RETURN-CODE                                        01209443
+012095*                                                                 01209543
+012096*                                                                 01209660
+012097     EXEC SQL                                                     01209760
+012098         COMMIT                                                   01209860
+012099     END-EXEC.                                                    01209960
+012100*                                                                 01210060
+012200     GOBACK                                                       01220043
+012400     .                                                            01240001
+012500*                                                                 01250001
+012510 0001-INITIALIZE.                                                 01251052
+012511*                                                                 01251151
+012512     MOVE ALL '-' TO FILLER1 OF HDR-RUNLOG-REC-DASH               01251251
+012513                     FILLER2 OF HDR-RUNLOG-REC-DASH               01251351
+012514                     FILLER3 OF HDR-RUNLOG-REC-DASH               01251451
+012515                     FILLER4 OF HDR-RUNLOG-REC-DASH               01251551
+012516                     FILLER1 OF HDR-EXCPTION-REC-DASH             01251651
+012517                     FILLER2 OF HDR-EXCPTION-REC-DASH             01251751
+012519                     FILLER1 OF HDR-SUMMARY-REC-DASH              01251951
+012520                     FILLER2 OF HDR-SUMMARY-REC-DASH              01252051
+012521                     FILLER3 OF HDR-SUMMARY-REC-DASH              01252151
+012522                     FILLER4 OF HDR-SUMMARY-REC-DASH              01252251
+012523                     FILLER5 OF HDR-SUMMARY-REC-DASH              01252351
+012524                     FILLER6 OF HDR-SUMMARY-REC-DASH              01252451
+012525                     FILLER7 OF HDR-SUMMARY-REC-DASH              01252551
+012526                     FILLER8 OF HDR-SUMMARY-REC-DASH              01252651
+012527                     FILLER9 OF HDR-SUMMARY-REC-DASH              01252751
+012528*                                                                 01252851
+012529     CONTINUE.                                                    01252952
+012530*                                                                 01253052
+012531 0001-EXIT.                                                       01253152
+012532     EXIT.                                                        01253252
+012540*                                                                 01254051
+012600 1000-PROCESS-EXCEPTION.                                          01260043
+012610*                                                                 01261043
+012611     OPEN OUTPUT EXCPTION-REPORT                                  01261145
+012612*                                                                 01261244
+012613     IF EXCPTION-FILE-STATUS NOT = 0                              01261345
+012614        MOVE SPACES TO WS-EXCEPTION                               01261444
+012615        STRING                                                    01261544
+012616           'Open EXCEPTION FILE failed : File-Status = '          01261644
+012617           EXCPTION-FILE-STATUS                                   01261745
+012618           DELIMITED BY SIZE                                      01261844
+012619          INTO WS-EXCEPTION                                       01261944
+012620        END-STRING                                                01262044
+012621        PERFORM 9000-REPORT-EXCEPTION                             01262144
+012622           THRU 9000-EXIT                                         01262244
+012623     END-IF                                                       01262344
+012624*                                                                 01262444
+012625     WRITE EXCPTION-RECORD FROM HDR-EXCPTION-REC-DASH             01262550
+012626     WRITE EXCPTION-RECORD FROM HDR-EXCPTION-REC                  01262650
+012627     WRITE EXCPTION-RECORD FROM HDR-EXCPTION-REC-DASH             01262750
+012628*                                                                 01262850
+012629     IF EXCPTION-FILE-STATUS NOT = 0                              01262950
+012630        MOVE SPACES TO WS-EXCEPTION                               01263050
+012631        STRING                                                    01263150
+012632           'Write EXCEPTION Header failed : File-Status = '       01263250
+012633           EXCPTION-FILE-STATUS                                   01263350
+012634           DELIMITED BY SIZE                                      01263450
+012635          INTO WS-EXCEPTION                                       01263550
+012636        END-STRING                                                01263650
+012637        PERFORM 9000-REPORT-EXCEPTION                             01263750
+012638           THRU 9000-EXIT                                         01263850
+012639     END-IF                                                       01263950
+012640*                                                                 01264050
+012641     EXEC SQL                                                     01264150
+012642         OPEN EXCPTION_CURSOR                                     01264250
+012643     END-EXEC                                                     01264350
+012644*                                                                 01264450
+012645     IF SQLCODE NOT = 0 THEN                                      01264550
+012646        MOVE SQLCODE TO WS-SQLCODE                                01264650
+012647        MOVE SPACES TO WS-EXCEPTION                               01264750
+012648        STRING                                                    01264850
+012649           'Open EXCPTION_CURSOR Cursor failed : SQLCODE = '      01264950
+012650           WS-SQLCODE                                             01265050
+012651           DELIMITED BY SIZE                                      01265150
+012652          INTO WS-EXCEPTION                                       01265250
+012653        END-STRING                                                01265350
+012654        PERFORM 9000-REPORT-EXCEPTION                             01265450
+012655           THRU 9000-EXIT                                         01265550
+012656     END-IF                                                       01265650
+012657*                                                                 01265750
+012658     EXEC SQL                                                     01265850
+012659         FETCH EXCPTION_CURSOR                                    01265950
+012661          INTO :EXC-TYPE                                          01266155
+012662              ,:EXC-DESCRIPTION                                   01266250
+012665     END-EXEC                                                     01266544
+012666*                                                                 01266644
+012667     EVALUATE TRUE                                                01266747
+012668      WHEN SQLCODE = 0                                            01266847
+012669        CONTINUE                                                  01266944
+012670      WHEN SQLCODE = 100                                          01267044
+012671        MOVE '*** No Exceptions ****' TO EXCPTION-RECORD          01267144
+012672        WRITE EXCPTION-RECORD                                     01267244
+012673        IF EXCPTION-FILE-STATUS NOT = 0                           01267345
+012674           MOVE SPACES TO WS-EXCEPTION                            01267444
+012675           STRING                                                 01267544
+012676              'Write EXCEPTION FILE failed : File-Status = '      01267644
+012677              EXCPTION-FILE-STATUS                                01267745
+012678              DELIMITED BY SIZE                                   01267844
+012679             INTO WS-EXCEPTION                                    01267944
+012680           END-STRING                                             01268044
+012681           PERFORM 9000-REPORT-EXCEPTION                          01268144
+012682              THRU 9000-EXIT                                      01268244
+012683        END-IF                                                    01268344
+012684      WHEN OTHER                                                  01268444
+012685        MOVE SQLCODE TO WS-SQLCODE                                01268544
+012686        MOVE SPACES TO WS-EXCEPTION                               01268644
+012687        STRING                                                    01268744
+012688           'Fetch EXCPTION_CURSOR Cursor failed : SQLCODE = '     01268844
+012689           WS-SQLCODE                                             01268944
+012690           DELIMITED BY SIZE                                      01269044
+012691          INTO WS-EXCEPTION                                       01269144
+012692        END-STRING                                                01269244
+012693        PERFORM 9000-REPORT-EXCEPTION                             01269344
+012694           THRU 9000-EXIT                                         01269444
+012698     END-EVALUATE                                                 01269847
+012699*                                                                 01269944
+012700     PERFORM UNTIL SQLCODE NOT = 0                                01270044
+012701*                                                                 01270144
+012702*        MOVE EXC-TIMESTAMP     TO PRT-EXCPTION-TS                01270255
+012703         MOVE EXC-TYPE          TO PRT-EXCPTION-TYPE              01270344
+012704         MOVE EXC-DESCRIPTION-TEXT(1:EXC-DESCRIPTION-LEN)         01270444
+012705           TO PRT-EXCPTION-DESC                                   01270544
+012706*                                                                 01270644
+012707         WRITE EXCPTION-RECORD FROM PRT-EXCPTION-REC              01270747
+012708*                                                                 01270844
+012709         IF EXCPTION-FILE-STATUS NOT = 0                          01270945
+012710            MOVE SPACES TO WS-EXCEPTION                           01271044
+012720            STRING                                                01272044
+012730               'Write EXCEPTION Header failed : File-Status = '   01273044
+012740               EXCPTION-FILE-STATUS                               01274045
+012750               DELIMITED BY SIZE                                  01275044
+012760              INTO WS-EXCEPTION                                   01276044
+012770            END-STRING                                            01277044
+012771            PERFORM 9000-REPORT-EXCEPTION                         01277144
+012772               THRU 9000-EXIT                                     01277244
+012773         END-IF                                                   01277344
+012791*                                                                 01279144
+012792         EXEC SQL                                                 01279244
+012793             FETCH EXCPTION_CURSOR                                01279344
+012795              INTO :EXC-TYPE                                      01279555
+012796                  ,:EXC-DESCRIPTION                               01279644
+012801         END-EXEC                                                 01280144
+012802*                                                                 01280244
+012803         IF SQLCODE = 0 OR 100 THEN                               01280344
+012804            CONTINUE                                              01280444
+012805         ELSE                                                     01280544
+012806            MOVE SQLCODE TO WS-SQLCODE                            01280644
+012807            MOVE SPACES TO WS-EXCEPTION                           01280744
+012808            STRING                                                01280844
+012809               'Fetch EXCPTION_CURSOR Cursor failed : SQLCODE = ' 01280944
+012810               WS-SQLCODE                                         01281044
+012811               DELIMITED BY SIZE                                  01281144
+012812              INTO WS-EXCEPTION                                   01281244
+012813            END-STRING                                            01281344
+012814            PERFORM 9000-REPORT-EXCEPTION                         01281444
+012815               THRU 9000-EXIT                                     01281544
+012824         END-IF                                                   01282444
+012825     END-PERFORM                                                  01282544
+012826                                                                  01282644
+012827     EXEC SQL                                                     01282744
+012828         CLOSE EXCPTION_CURSOR                                    01282844
+012829     END-EXEC                                                     01282944
+012830                                                                  01283044
+012831     EVALUATE TRUE                                                01283144
+012832        WHEN SQLCODE = 0                                          01283244
+012833             CONTINUE                                             01283344
+012834        WHEN OTHER                                                01283444
+012835           MOVE SQLCODE TO WS-SQLCODE                             01283544
+012837           MOVE SPACES TO WS-EXCEPTION                            01283744
+012838           STRING                                                 01283844
+012839              'Close EXCPTION_CURSOR failed : SQLCODE = '         01283944
+012840              WS-SQLCODE                                          01284044
+012841              DELIMITED BY SIZE                                   01284144
+012842             INTO WS-EXCEPTION                                    01284244
+012843           END-STRING                                             01284344
+012844           PERFORM 9000-REPORT-EXCEPTION                          01284444
+012845              THRU 9000-EXIT                                      01284544
+012846     END-EVALUATE                                                 01284644
+012847*                                                                 01284744
+012848     WRITE EXCPTION-RECORD FROM HDR-EXCPTION-REC-DASH             01284851
+012849*                                                                 01284951
+012850     CLOSE EXCPTION-REPORT                                        01285045
+012851*                                                                 01285144
+012852     IF EXCPTION-FILE-STATUS NOT = 0                              01285245
+012853        MOVE SPACES TO WS-EXCEPTION                               01285344
+012854        STRING                                                    01285444
+012855           'Close EXCEPTION FILE failed : File-Status = '         01285544
+012856           EXCPTION-FILE-STATUS                                   01285645
+012857           DELIMITED BY SIZE                                      01285744
+012858          INTO WS-EXCEPTION                                       01285844
+012859        END-STRING                                                01285944
+012860        PERFORM 9000-REPORT-EXCEPTION                             01286044
+012861           THRU 9000-EXIT                                         01286144
+012862     END-IF                                                       01286244
+012863*                                                                 01286344
+012864     CONTINUE.                                                    01286444
+012865*                                                                 01286544
+012870 1000-EXIT.                                                       01287043
+012900     EXIT.                                                        01290043
+041300*                                                                 04130001
+041320 2000-PROCESS-TIMINGS.                                            04132043
+041321*                                                                 04132144
+041322     OPEN OUTPUT RUNLOG-REPORT                                    04132244
+041323*                                                                 04132344
+041324     IF RUNLOG-FILE-STATUS NOT = 0                                04132444
+041325        MOVE SPACES TO WS-EXCEPTION                               04132544
+041326        STRING                                                    04132644
+041327           'Open RUNLOG FILE failed : File-Status = '             04132744
+041328           RUNLOG-FILE-STATUS                                     04132844
+041329           DELIMITED BY SIZE                                      04132944
+041330          INTO WS-EXCEPTION                                       04133044
+041331        END-STRING                                                04133144
+041332        PERFORM 9000-REPORT-EXCEPTION                             04133244
+041333           THRU 9000-EXIT                                         04133344
+041334     END-IF                                                       04133444
+041335*                                                                 04133544
+041336     WRITE RUNLOG-RECORD FROM HDR-RUNLOG-REC-DASH                 04133650
+041337     WRITE RUNLOG-RECORD FROM HDR-RUNLOG-REC                      04133745
+041338     WRITE RUNLOG-RECORD FROM HDR-RUNLOG-REC-DASH                 04133850
+041339*                                                                 04133944
+041340     IF RUNLOG-FILE-STATUS NOT = 0                                04134044
+041341        MOVE SPACES TO WS-EXCEPTION                               04134144
+041342        STRING                                                    04134244
+041343           'Write EXCEPTION Header failed : File-Status = '       04134344
+041344           RUNLOG-FILE-STATUS                                     04134444
+041345           DELIMITED BY SIZE                                      04134544
+041346          INTO WS-EXCEPTION                                       04134644
+041347        END-STRING                                                04134744
+041348        PERFORM 9000-REPORT-EXCEPTION                             04134844
+041349           THRU 9000-EXIT                                         04134944
+041350     END-IF                                                       04135044
+041351*                                                                 04135144
+041352     EXEC SQL                                                     04135244
+041353         OPEN RUNLOG_CURSOR                                       04135344
+041354     END-EXEC                                                     04135444
+041355*                                                                 04135544
+041356     IF SQLCODE NOT = 0 THEN                                      04135644
+041357        MOVE SQLCODE TO WS-SQLCODE                                04135744
+041358        MOVE SPACES TO WS-EXCEPTION                               04135844
+041359        STRING                                                    04135944
+041360           'Open RUNLOG_CURSOR Cursor failed : SQLCODE = '        04136044
+041361           WS-SQLCODE                                             04136144
+041362           DELIMITED BY SIZE                                      04136244
+041363          INTO WS-EXCEPTION                                       04136344
+041364        END-STRING                                                04136444
+041365        PERFORM 9000-REPORT-EXCEPTION                             04136544
+041366           THRU 9000-EXIT                                         04136644
+041367     END-IF                                                       04136744
+041368*                                                                 04136844
+041369     EXEC SQL                                                     04136944
+041370         FETCH RUNLOG_CURSOR                                      04137044
+041371          INTO :LOG-TRANSACTION                                   04137144
+041372              ,:LOG-CURRENCY                                      04137244
+041373              ,:LOG-START-TS                                      04137344
+041374              ,:LOG-END-TS                                        04137444
+041376     END-EXEC                                                     04137644
+041377*                                                                 04137744
+041378     EVALUATE TRUE                                                04137847
+041379      WHEN SQLCODE = 0 OR 100                                     04137947
+041380           CONTINUE                                               04138047
+041395      WHEN OTHER                                                  04139544
+041396        MOVE SQLCODE TO WS-SQLCODE                                04139644
+041397        MOVE SPACES TO WS-EXCEPTION                               04139744
+041398        STRING                                                    04139844
+041399           'Fetch RUNLOG_CURSOR Cursor failed : SQLCODE = '       04139944
+041400           WS-SQLCODE                                             04140044
+041401           DELIMITED BY SIZE                                      04140144
+041402          INTO WS-EXCEPTION                                       04140244
+041403        END-STRING                                                04140344
+041404        PERFORM 9000-REPORT-EXCEPTION                             04140444
+041405           THRU 9000-EXIT                                         04140544
+041406     END-EVALUATE                                                 04140647
+041407*                                                                 04140744
+041408     PERFORM UNTIL SQLCODE NOT = 0                                04140844
+041409*                                                                 04140944
+041417         MOVE LOG-TRANSACTION   TO PRT-RUNLOG-TRANSACTION         04141744
+041418         MOVE LOG-CURRENCY      TO PRT-RUNLOG-CURRENCY            04141844
+041419         MOVE LOG-START-TS      TO PRT-RUNLOG-START-TS            04141944
+041420         MOVE LOG-END-TS        TO PRT-RUNLOG-END-TS              04142044
+041421*                                                                 04142144
+041423         WRITE RUNLOG-RECORD FROM PRT-RUNLOG-REC                  04142350
+041425*                                                                 04142550
+041426         IF RUNLOG-FILE-STATUS NOT = 0                            04142650
+041427            MOVE SPACES TO WS-EXCEPTION                           04142750
+041428            STRING                                                04142850
+041429               'Write EXCEPTION Header failed : File-Status = '   04142950
+041430               RUNLOG-FILE-STATUS                                 04143050
+041431               DELIMITED BY SIZE                                  04143150
+041432              INTO WS-EXCEPTION                                   04143250
+041433            END-STRING                                            04143350
+041434            PERFORM 9000-REPORT-EXCEPTION                         04143450
+041435               THRU 9000-EXIT                                     04143550
+041436         END-IF                                                   04143650
+041437*                                                                 04143750
+041438         EXEC SQL                                                 04143850
+041439             FETCH RUNLOG_CURSOR                                  04143950
+041440              INTO :LOG-TRANSACTION                               04144050
+041441                  ,:LOG-CURRENCY                                  04144150
+041442                  ,:LOG-START-TS                                  04144250
+041443                  ,:LOG-END-TS                                    04144350
+041444         END-EXEC                                                 04144450
+041445*                                                                 04144550
+041446         IF SQLCODE = 0 OR 100 THEN                               04144650
+041447            CONTINUE                                              04144750
+041448         ELSE                                                     04144850
+041449            MOVE SQLCODE TO WS-SQLCODE                            04144950
+041450            MOVE SPACES TO WS-EXCEPTION                           04145050
+041451            STRING                                                04145150
+041452               'Fetch RUNLOG_CURSOR Cursor failed : SQLCODE = '   04145250
+041453               WS-SQLCODE                                         04145350
+041454               DELIMITED BY SIZE                                  04145450
+041455              INTO WS-EXCEPTION                                   04145550
+041456            END-STRING                                            04145650
+041457            PERFORM 9000-REPORT-EXCEPTION                         04145750
+041458               THRU 9000-EXIT                                     04145850
+041459         END-IF                                                   04145950
+041460     END-PERFORM                                                  04146050
+041461                                                                  04146150
+041462     EXEC SQL                                                     04146250
+041463         CLOSE RUNLOG_CURSOR                                      04146350
+041464     END-EXEC                                                     04146450
+041465                                                                  04146550
+041466     EVALUATE TRUE                                                04146650
+041467        WHEN SQLCODE = 0                                          04146750
+041468             CONTINUE                                             04146850
+041469        WHEN OTHER                                                04146950
+041470           MOVE SQLCODE TO WS-SQLCODE                             04147050
+041471           MOVE SPACES TO WS-EXCEPTION                            04147144
+041472           STRING                                                 04147244
+041473              'Close RUNLOG_CURSOR failed : SQLCODE = '           04147344
+041474              WS-SQLCODE                                          04147444
+041475              DELIMITED BY SIZE                                   04147544
+041476             INTO WS-EXCEPTION                                    04147644
+041477           END-STRING                                             04147744
+041478           PERFORM 9000-REPORT-EXCEPTION                          04147844
+041479              THRU 9000-EXIT                                      04147944
+041480     END-EVALUATE                                                 04148044
+041481*                                                                 04148144
+041482     WRITE RUNLOG-RECORD FROM HDR-RUNLOG-REC-DASH                 04148251
+041483*                                                                 04148351
+041484     CLOSE RUNLOG-REPORT                                          04148444
+041485*                                                                 04148544
+041486     IF RUNLOG-FILE-STATUS NOT = 0                                04148644
+041487        MOVE SPACES TO WS-EXCEPTION                               04148744
+041488        STRING                                                    04148844
+041489           'Close RUNLOG FILE failed : File-Status = '            04148944
+041490           RUNLOG-FILE-STATUS                                     04149044
+041491           DELIMITED BY SIZE                                      04149144
+041492          INTO WS-EXCEPTION                                       04149244
+041493        END-STRING                                                04149344
+041494        PERFORM 9000-REPORT-EXCEPTION                             04149444
+041495           THRU 9000-EXIT                                         04149544
+041496     END-IF                                                       04149644
+041497*                                                                 04149744
+041498     CONTINUE.                                                    04149844
+041499*                                                                 04149944
+041500 2000-EXIT.                                                       04150043
+041501     EXIT.                                                        04150143
+041502*                                                                 04150243
+041503 3000-PROCESS-SUMMARY-RPT.                                        04150343
+041504*                                                                 04150443
+041505     OPEN OUTPUT SUMMARY-REPORT                                   04150544
+041506*                                                                 04150644
+041507     IF SUMMARY-FILE-STATUS NOT = 0                               04150744
+041508        MOVE SPACES TO WS-EXCEPTION                               04150844
+041509        STRING                                                    04150944
+041510           'Open SUMMARY FILE failed : File-Status = '            04151044
+041511           SUMMARY-FILE-STATUS                                    04151144
+041512           DELIMITED BY SIZE                                      04151244
+041513          INTO WS-EXCEPTION                                       04151344
+041514        END-STRING                                                04151444
+041515        PERFORM 9000-REPORT-EXCEPTION                             04151544
+041516           THRU 9000-EXIT                                         04151644
+041517     END-IF                                                       04151744
+041518*                                                                 04151844
+041519     WRITE SUMMARY-RECORD FROM HDR-SUMMARY-REC-DASH               04151950
+041520     WRITE SUMMARY-RECORD FROM HDR-SUMMARY-REC                    04152050
+041521     WRITE SUMMARY-RECORD FROM HDR-SUMMARY-REC-DASH               04152150
+041522*                                                                 04152250
+041523     IF SUMMARY-FILE-STATUS NOT = 0                               04152350
+041524        MOVE SPACES TO WS-EXCEPTION                               04152450
+041525        STRING                                                    04152550
+041526           'Write EXCEPTION Header failed : File-Status = '       04152650
+041527           SUMMARY-FILE-STATUS                                    04152750
+041528           DELIMITED BY SIZE                                      04152850
+041529          INTO WS-EXCEPTION                                       04152950
+041530        END-STRING                                                04153050
+041531        PERFORM 9000-REPORT-EXCEPTION                             04153150
+041532           THRU 9000-EXIT                                         04153250
+041533     END-IF                                                       04153350
+041534*                                                                 04153450
+041535     EXEC SQL                                                     04153550
+041536         OPEN SUMMARY_CURSOR                                      04153650
+041537     END-EXEC                                                     04153750
+041538*                                                                 04153850
+041539     IF SQLCODE NOT = 0 THEN                                      04153950
+041540        MOVE SQLCODE TO WS-SQLCODE                                04154050
+041541        MOVE SPACES TO WS-EXCEPTION                               04154150
+041542        STRING                                                    04154250
+041543           'Open SUMMARY_CURSOR Cursor failed : SQLCODE = '       04154350
+041544           WS-SQLCODE                                             04154450
+041545           DELIMITED BY SIZE                                      04154550
+041546          INTO WS-EXCEPTION                                       04154650
+041547        END-STRING                                                04154750
+041548        PERFORM 9000-REPORT-EXCEPTION                             04154850
+041549           THRU 9000-EXIT                                         04154950
+041550     END-IF                                                       04155050
+041551*                                                                 04155150
+041552     EXEC SQL                                                     04155250
+041553         FETCH SUMMARY_CURSOR                                     04155350
+041554          INTO :SUM-CUSTOMER-ID                                   04155450
+041555              ,:SUM-OVERDUE                                       04155550
+041556              ,:SUM-REJECTED                                      04155650
+041557              ,:SUM-SETTLED                                       04155750
+041558              ,:SUM-CURRENCY                                      04155850
+041559              ,:SUM-OPEN-BALANCE                                  04155950
+041560              ,:SUM-TOTAL-DEBIT                                   04156050
+041561              ,:SUM-TOTAL-CREDIT                                  04156150
+041562              ,:SUM-CLOSE-BALANCE                                 04156250
+041563     END-EXEC                                                     04156350
+041564*                                                                 04156450
+041565     EVALUATE TRUE                                                04156550
+041566      WHEN SQLCODE = 0 OR 100                                     04156650
+041567           CONTINUE                                               04156750
+041568      WHEN OTHER                                                  04156850
+041569        MOVE SQLCODE TO WS-SQLCODE                                04156950
+041570        MOVE SPACES TO WS-EXCEPTION                               04157050
+041571        STRING                                                    04157150
+041572           'Fetch SUMMARY_CURSOR Cursor failed : SQLCODE = '      04157250
+041573           WS-SQLCODE                                             04157350
+041574           DELIMITED BY SIZE                                      04157450
+041575          INTO WS-EXCEPTION                                       04157550
+041576        END-STRING                                                04157650
+041577        PERFORM 9000-REPORT-EXCEPTION                             04157750
+041578           THRU 9000-EXIT                                         04157850
+041579     END-EVALUATE                                                 04157950
+041580*                                                                 04158050
+041581     PERFORM UNTIL SQLCODE NOT = 0                                04158150
+041590*                                                                 04159050
+041594         MOVE SUM-CUSTOMER-ID   TO PRT-SUMMARY-CUSTOMER-ID        04159444
+041595         MOVE SUM-OVERDUE       TO PRT-SUMMARY-OVERDUE            04159544
+041596         MOVE SUM-REJECTED      TO PRT-SUMMARY-REJECTED           04159644
+041597         MOVE SUM-SETTLED       TO PRT-SUMMARY-SETTLED            04159744
+041598         MOVE SUM-CURRENCY      TO PRT-SUMMARY-CURRENCY           04159844
+041599         MOVE SUM-OPEN-BALANCE  TO PRT-SUMMARY-OPEN-BALANCE       04159944
+041600         MOVE SUM-TOTAL-DEBIT   TO PRT-SUMMARY-TOTAL-DEBIT        04160044
+041601         MOVE SUM-TOTAL-CREDIT  TO PRT-SUMMARY-TOTAL-CREDIT       04160144
+041602         MOVE SUM-CLOSE-BALANCE TO PRT-SUMMARY-CLOSE-BALANCE      04160244
+041604*                                                                 04160444
+041605         WRITE SUMMARY-RECORD FROM PRT-SUMMARY-REC                04160545
+041606*                                                                 04160644
+041607         IF SUMMARY-FILE-STATUS NOT = 0                           04160744
+041608            MOVE SPACES TO WS-EXCEPTION                           04160844
+041609            STRING                                                04160944
+041610               'Write EXCEPTION Header failed : File-Status = '   04161044
+041611               SUMMARY-FILE-STATUS                                04161144
+041612               DELIMITED BY SIZE                                  04161244
+041613              INTO WS-EXCEPTION                                   04161344
+041614            END-STRING                                            04161444
+041615            PERFORM 9000-REPORT-EXCEPTION                         04161544
+041616               THRU 9000-EXIT                                     04161644
+041617         END-IF                                                   04161744
+041618*                                                                 04161844
+041619         EXEC SQL                                                 04161944
+041620             FETCH SUMMARY_CURSOR                                 04162044
+041621              INTO :SUM-CUSTOMER-ID                               04162144
+041622                  ,:SUM-OVERDUE                                   04162244
+041623                  ,:SUM-REJECTED                                  04162344
+041624                  ,:SUM-SETTLED                                   04162444
+041625                  ,:SUM-CURRENCY                                  04162544
+041626                  ,:SUM-OPEN-BALANCE                              04162644
+041627                  ,:SUM-TOTAL-DEBIT                               04162744
+041628                  ,:SUM-TOTAL-CREDIT                              04162844
+041629         END-EXEC                                                 04162944
+041630*                                                                 04163044
+041631         IF SQLCODE = 0 OR 100 THEN                               04163144
+041632            CONTINUE                                              04163244
+041633         ELSE                                                     04163344
+041634            MOVE SQLCODE TO WS-SQLCODE                            04163444
+041635            MOVE SPACES TO WS-EXCEPTION                           04163544
+041636            STRING                                                04163644
+041637               'Fetch SUMMARY_CURSOR Cursor failed : SQLCODE = '  04163744
+041638               WS-SQLCODE                                         04163844
+041639               DELIMITED BY SIZE                                  04163944
+041640              INTO WS-EXCEPTION                                   04164044
+041641            END-STRING                                            04164144
+041642            PERFORM 9000-REPORT-EXCEPTION                         04164244
+041643               THRU 9000-EXIT                                     04164344
+041644         END-IF                                                   04164444
+041645     END-PERFORM                                                  04164544
+041646                                                                  04164644
+041647     EXEC SQL                                                     04164744
+041648         CLOSE SUMMARY_CURSOR                                     04164844
+041649     END-EXEC                                                     04164944
+041650                                                                  04165044
+041651     EVALUATE TRUE                                                04165144
+041652        WHEN SQLCODE = 0                                          04165244
+041653             CONTINUE                                             04165344
+041654        WHEN OTHER                                                04165444
+041655           MOVE SQLCODE TO WS-SQLCODE                             04165544
+041656           MOVE SPACES TO WS-EXCEPTION                            04165644
+041657           STRING                                                 04165744
+041658              'Close SUMMARY_CURSOR failed : SQLCODE = '          04165844
+041659              WS-SQLCODE                                          04165944
+041660              DELIMITED BY SIZE                                   04166044
+041661             INTO WS-EXCEPTION                                    04166144
+041662           END-STRING                                             04166244
+041663           PERFORM 9000-REPORT-EXCEPTION                          04166344
+041664              THRU 9000-EXIT                                      04166444
+041665     END-EVALUATE                                                 04166544
+041666*                                                                 04166644
+041667     WRITE SUMMARY-RECORD FROM HDR-SUMMARY-REC-DASH               04166751
+041668*                                                                 04166851
+041669     CLOSE SUMMARY-REPORT                                         04166944
+041670*                                                                 04167044
+041671     IF SUMMARY-FILE-STATUS NOT = 0                               04167144
+041672        MOVE SPACES TO WS-EXCEPTION                               04167244
+041673        STRING                                                    04167344
+041674           'Close SUMMARY FILE failed : File-Status = '           04167444
+041675           SUMMARY-FILE-STATUS                                    04167544
+041676           DELIMITED BY SIZE                                      04167644
+041677          INTO WS-EXCEPTION                                       04167744
+041678        END-STRING                                                04167844
+041679        PERFORM 9000-REPORT-EXCEPTION                             04167944
+041680           THRU 9000-EXIT                                         04168044
+041681     END-IF                                                       04168144
+041682*                                                                 04168244
+041683     CONTINUE.                                                    04168344
+041684*                                                                 04168444
+041685 3000-EXIT.                                                       04168544
+041686     EXIT.                                                        04168644
+041687*                                                                 04168744
+041688 4000-CLEANUP.                                                    04168844
+041689*                                                                 04168944
+041690     EXEC SQL                                                     04169044
+041691         DELETE FROM TBTRDSTQ                                     04169149
+041692     END-EXEC                                                     04169244
+041693*                                                                 04169349
+041694     EXEC SQL                                                     04169449
+041695         DELETE FROM TBTRDLOG                                     04169549
+041696     END-EXEC                                                     04169649
+041697*                                                                 04169749
+041698     EXEC SQL                                                     04169849
+041699         DELETE FROM TBTRDSUM                                     04169949
+041700     END-EXEC                                                     04170049
+041701*                                                                 04170149
+041702     EXEC SQL                                                     04170249
+041703         DELETE FROM TBTRDEXC                                     04170349
+041704     END-EXEC                                                     04170449
+041705*                                                                 04170549
+041706     EXEC SQL                                                     04170649
+041707         COMMIT                                                   04170749
+041708     END-EXEC.                                                    04170849
+041709*                                                                 04170949
+041710 4000-EXIT.                                                       04171049
+041711     EXIT.                                                        04171149
+041712*                                                                 04171249
+041713 9000-REPORT-EXCEPTION.                                           04171349
+041714*                                                                 04171449
+041715     DISPLAY WS-EXCEPTION                                         04171549
+041716     MOVE 16 TO RETURN-CODE                                       04171649
+041717     GOBACK.                                                      04171749
+041718*                                                                 04171849
+041719 9000-EXIT.                                                       04171949
+041720*                                                                 04172044
+041800     EXIT.                                                        04180043

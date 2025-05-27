@@ -1,0 +1,105 @@
+000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. TRDPBEXC.                                            00020005
+000300***************************************************************** 00030000
+000400*                                                               * 00040000
+000500* TRDPBEXC : Exception Hander                                   * 00050005
+000600*                                                               * 00060000
+001200***************************************************************** 00120000
+001300 ENVIRONMENT DIVISION.                                            00130000
+001400 DATA DIVISION.                                                   00140000
+001500 WORKING-STORAGE SECTION.                                         00150000
+004600*                                                                 00460000
+004610 01  WS-SQLCODE              PIC  -(4).                           00461002
+004611 01  WS-ABEND-CODE           PIC  9(04) COMP.                     00461102
+004620*                                                                 00462002
+004700     EXEC SQL                                                     00470003
+004800        INCLUDE SQLCA                                             00480003
+004900     END-EXEC                                                     00490003
+005000*                                                                 00500002
+005100     EXEC SQL                                                     00510003
+005200        INCLUDE TBTRDEXC                                          00520003
+005300     END-EXEC                                                     00530003
+005700*                                                                 00570000
+005800 LINKAGE SECTION.                                                 00580000
+005900 COPY EXCPTION.                                                   00590002
+006000*                                                                 00600000
+006100 PROCEDURE DIVISION USING EXCEPTION-RECORD-LEN                    00610002
+006110                        , EXCEPTION-RECORD.                       00611004
+006200                                                                  00620000
+006300 0000-MAINLINE.                                                   00630000
+006400                                                                  00640000
+006410*                                                                 00641002
+006420* Data Exceptions are tolerated and application continues         00642002
+006430*                                                                 00643002
+006440     IF EXCEPTION-DATA THEN                                       00644008
+006441        CONTINUE                                                  00644102
+006442     ELSE                                                         00644202
+006443        EXEC SQL                                                  00644302
+006444           ROLLBACK                                               00644402
+006445        END-EXEC                                                  00644502
+006460     END-IF                                                       00646002
+006470*                                                                 00647002
+006480*    MOVE EXCEPTION-TIMESTAMP     TO EXC-TIMESTAMP                00648011
+006490     MOVE EXCEPTION-TYPE          TO EXC-TYPE                     00649002
+006492     MOVE EXCEPTION-RECORD-LEN    TO EXC-DESCRIPTION-LEN          00649202
+006493     MOVE EXCEPTION-DESC          TO EXC-DESCRIPTION-TEXT         00649302
+006494*                                                                 00649402
+006497     EXEC SQL                                                     00649709
+006498        INSERT INTO TBTRDEXC                                      00649809
+006499              ( EXC_TYPE                                          00649915
+006500              ,EXC_DESCRIPTION)                                   00650015
+006501        VALUES(:EXC-TYPE                                          00650111
+006502              ,:EXC-DESCRIPTION)                                  00650209
+006503     END-EXEC                                                     00650309
+006504     EVALUATE SQLCODE                                             00650409
+006505        WHEN 0                                                    00650509
+006506           CONTINUE                                               00650609
+006507        WHEN -803                                                 00650709
+006508* Retry Insert if it failed with SQLCODE -803 (Duplicate)         00650809
+006509            PERFORM UNTIL SQLCODE = 0                             00650909
+006510*              EXEC SQL                                           00651011
+006511*                  SET :EXC-TIMESTAMP  = CURRENT_TIMESTAMP        00651111
+006512*              END-EXEC                                           00651211
+006513*                                                                 00651309
+006514               EXEC SQL                                           00651409
+006515                  INSERT INTO TBTRDEXC                            00651509
+006516                        ( EXC_TYPE                                00651615
+006517                        ,EXC_DESCRIPTION)                         00651715
+006518                  VALUES(:EXC-TYPE                                00651811
+006519                        ,:EXC-DESCRIPTION)                        00651909
+006520               END-EXEC                                           00652009
+006521            END-PERFORM                                           00652109
+006522        WHEN OTHER                                                00652209
+006523           MOVE SQLCODE TO WS-SQLCODE                             00652309
+006524           DISPLAY 'Error Logging Exception.. Sqlcode = '         00652410
+006525                   WS-SQLCODE                                     00652510
+006526           PERFORM 9999-ABEND-DUMP                                00652609
+006527              THRU 9999-EXIT                                      00652709
+006530     END-EVALUATE                                                 00653009
+007100                                                                  00710000
+007101* Tolerate Data Exception                                         00710102
+007103     IF EXCEPTION-DATA THEN                                       00710307
+007104        CONTINUE                                                  00710402
+007105     ELSE                                                         00710502
+007106* Commit Exception log database insert                            00710602
+007107        EXEC SQL                                                  00710702
+007108           COMMIT                                                 00710802
+007109        END-EXEC                                                  00710902
+007110*                                                                 00711002
+007111        PERFORM 9999-ABEND-DUMP                                   00711102
+007112           THRU 9999-EXIT                                         00711202
+007113     END-IF                                                       00711302
+007120                                                                  00712002
+007200     GOBACK                                                       00720000
+007300     .                                                            00730000
+007400*                                                                 00740000
+007500 9999-ABEND-DUMP.                                                 00750002
+007501*                                                                 00750102
+007502     DISPLAY  EXC-TYPE ' Exception : '                            00750206
+007503              EXC-DESCRIPTION-TEXT(1 : 100)                       00750306
+007504     MOVE 255 TO WS-ABEND-CODE                                    00750402
+007505     CALL 'ILBOABN0'  USING WS-ABEND-CODE.                        00750504
+007506*                                                                 00750602
+007510 9999-EXIT.                                                       00751002
+007520*                                                                 00752002
+007530     EXIT.                                                        00753002

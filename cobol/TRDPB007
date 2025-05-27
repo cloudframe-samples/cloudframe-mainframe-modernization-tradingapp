@@ -1,0 +1,182 @@
+000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. TRDPB007.                                            00020001
+000300*----------------------------------------------------------------*00030000
+000400* PURPOSE: WRITE RECORDS TO TRADING.QUEUE.                       *00040000
+000500*----------------------------------------------------------------*00050000
+000600 ENVIRONMENT DIVISION.                                            00060000
+000700 DATA DIVISION.                                                   00070000
+000800*---------------------------------------------------------------* 00080000
+000900 WORKING-STORAGE SECTION.                                         00090000
+001000*---------------------------------------------------------------* 00100000
+001100                                                                  00110000
+001401 01  WS-MQM                      PIC X(48) VALUE SPACES.
+001403 01  WS-HCONN                    PIC S9(9) BINARY.
+001404 01  WS-COMPCODE                 PIC S9(9) BINARY.
+001405 01  WS-REASON                   PIC S9(9) BINARY.
+001430 01  WS-TEMPORARY-Q              PIC X(48).
+001440 01  WS-HOBJ                     PIC S9(9) BINARY.
+001480 01  WS-HOBJ-INQUIRY             PIC S9(9) BINARY.
+001490 01  WS-OPTIONS                  PIC S9(9) BINARY.
+001500 01  WS-BUFFLEN                  PIC S9(9) BINARY.
+001600 01  WS-OBJECT                   PIC X(48).
+009100                                                                  02950000
+009101 01  WS-TRADING-PARMS            PIC X(29) VALUE SPACES.          03291515
+009111                                                                  02950000
+009112 01  WS-MISC-DATA.
+009120     05  WS-COMPCODE-EDIT        PIC ---------9.
+009130     05  WS-REASON-EDIT          PIC ---------9.
+009140                                                                  00110000
+009141 01  WS-PUT-BUFFER.
+009143     05 W03-CSQ4BIIM.
+009144     COPY CSQ4VB1.
+009175                                                                  00110000
+009176 01  MQM-MESSAGE-DESCRIPTOR.
+009177     COPY CMQMDV.
+009255
+009261 01  MQM-PUT-MESSAGE-OPTIONS.
+009262     COPY CMQPMOV.                                                00110000
+009335
+009340 01  W05-MQM-CONSTANTS.
+009341     COPY CMQV.
+009342                                                                  00110000
+009343 01  MQM-OBJECT-DESCRIPTOR.
+009344     COPY CMQODV.
+009345                                                                  00110000
+009346*---------------------------------------------------------------* 03110000
+009350*LINKAGE SECTION.                                                 03120000
+009400*---------------------------------------------------------------* 03130000
+009500*----------------------------------------------------------------*03190000
+009600 PROCEDURE DIVISION.                                              03200000
+009700*----------------------------------------------------------------*03240000
+009800     CONTINUE.                                                    03250000
+009900*----------------------------------------------------------------*03260000
+010000 0000-MAINLINE.                                                   03270000
+010100*----------------------------------------------------------------*03280000
+010200                                                                  03290000
+010300     PERFORM 0010-GET-PROGRAM-INPUTS                              03290515
+010400        THRU 0010-EXIT                                            03290615
+010500                                                                  03290715
+010501     PERFORM 0100-MQ-CONNECT                                      03290515
+010502        THRU 0100-EXIT                                            03290615
+010503                                                                  03290715
+010510     PERFORM 0200-MQ-PUT-ONE                                      03290515
+010520        THRU 0200-EXIT                                            03290615
+010530                                                                  03290715
+010540     PERFORM 0300-MQ-DISCONNECT                                   03290515
+010550        THRU 0300-EXIT                                            03290615
+010560                                                                  03290715
+010900     GO TO 9999-EXIT                                              03291415
+011000                                                                  03291515
+011100     CONTINUE.                                                    03291615
+011200                                                                  03291715
+011300 0000-EXIT.                                                       03291815
+011400     EXIT.                                                        03291915
+011401                                                                  03292015
+011402*----------------------------------------------------------------*03292115
+011410 0010-GET-PROGRAM-INPUTS.                                         03290515
+011420*----------------------------------------------------------------*03292115
+011430                                                                  03291515
+011431     ACCEPT WS-TRADING-PARMS                                      03291515
+011432                                                                  03291515
+011440     CONTINUE.                                                    03291615
+011450                                                                  03291715
+011460 0010-EXIT.                                                       03291815
+011470     EXIT.                                                        03291915
+011500                                                                  03292015
+011600*----------------------------------------------------------------*03292115
+011700 0100-MQ-CONNECT.                                                       15
+011800*----------------------------------------------------------------*03292115
+011900                                                                  03293215
+011901     ACCEPT WS-MQM
+011920                                                                  03293215
+012000     CALL 'MQCONN' USING WS-MQM
+012100                       , WS-HCONN
+012200                       , WS-COMPCODE
+012300                       , WS-REASON
+012800
+012900     IF WS-COMPCODE NOT = MQCC-OK
+012901        MOVE WS-COMPCODE TO WS-COMPCODE-EDIT
+012902        MOVE WS-REASON   TO WS-REASON-EDIT
+013000        DISPLAY 'Program MQCONN, Connect Failed:'
+013010        DISPLAY 'Comp Code: ' WS-COMPCODE-EDIT
+013020        DISPLAY 'Reason...: ' WS-REASON-EDIT
+013030        GO TO 9999-EXIT                                           03291415
+013100     END-IF
+013200
+014000     CONTINUE.                                                    03293315
+014100                                                                  03293415
+014200 0100-EXIT.                                                       03293515
+014300     EXIT.                                                        03293615
+014400                                                                  03293715
+014456*----------------------------------------------------------------*03292115
+014457 0200-MQ-PUT-ONE.                                                       15
+014458*----------------------------------------------------------------*03292115
+014462
+014466     MOVE MQOT-Q               TO MQOD-OBJECTTYPE
+014467     MOVE 'TRADING.QUEUE'      TO MQOD-OBJECTNAME
+014468     MOVE MQMT-DATAGRAM        TO MQMD-MSGTYPE
+014469     MOVE MQCI-NONE            TO MQMD-CORRELID
+014470     MOVE MQMI-NONE            TO MQMD-MSGID
+014471*    MOVE WS-TEMPORARY-Q       TO MQMD-REPLYTOQ
+014472     MOVE SPACES               TO MQMD-REPLYTOQ
+014473                                , MQMD-REPLYTOQMGR
+014474     MOVE 5                    TO MQMD-PRIORITY
+014475     MOVE MQPER-NOT-PERSISTENT TO MQMD-PERSISTENCE
+014476     COMPUTE MQPMO-OPTIONS = MQPMO-NO-SYNCPOINT
+014477                           + MQPMO-DEFAULT-CONTEXT
+014478     MOVE WS-TRADING-PARMS       TO WS-PUT-BUFFER                 03291515
+014480     MOVE LENGTH OF CSQ4BIIM-MSG TO WS-BUFFLEN
+014481                                                                  03293415
+014484     CALL 'MQPUT1' USING WS-HCONN
+014485                      , MQOD
+014486                      , MQMD
+014487                      , MQPMO
+014488                      , WS-BUFFLEN
+014489                      , WS-PUT-BUFFER
+014490                      , WS-COMPCODE
+014491                      , WS-REASON
+014492
+014493     IF WS-COMPCODE NOT = MQCC-OK
+014494        MOVE WS-COMPCODE TO WS-COMPCODE-EDIT
+014495        MOVE WS-REASON   TO WS-REASON-EDIT
+014496        DISPLAY 'Program MQWRITE, Write Failed:'
+014497        DISPLAY 'Comp Code: ' WS-COMPCODE-EDIT
+014498        DISPLAY 'Reason...: ' WS-REASON-EDIT
+014499        GO TO 9999-EXIT                                           03291415
+014500     END-IF
+014501
+014502     DISPLAY 'Successfull write of: ' WS-PUT-BUFFER               03291515
+014504
+014505     CONTINUE.                                                    03293315
+014506                                                                  03293415
+014507 0200-EXIT.                                                       03293515
+014508     EXIT.                                                        03293615
+014510                                                                  03293715
+014551*----------------------------------------------------------------*03292115
+014552 0300-MQ-DISCONNECT.                                                    15
+014553*----------------------------------------------------------------*03292115
+014554                                                                  03293215
+014555     CALL 'MQDISC' USING WS-HCONN
+014556                       , WS-COMPCODE
+014557                       , WS-REASON
+014558
+014559     IF WS-COMPCODE NOT = MQCC-OK
+014560        MOVE WS-COMPCODE TO WS-COMPCODE-EDIT
+014561        MOVE WS-REASON   TO WS-REASON-EDIT
+014562        DISPLAY 'Program MQDISC, Disconnect Failed:'
+014563        DISPLAY 'Comp Code: ' WS-COMPCODE-EDIT
+014564        DISPLAY 'Reason...: ' WS-REASON-EDIT
+014565     END-IF
+014566
+014567     CONTINUE.                                                    03293315
+014568                                                                  03293415
+014569 0300-EXIT.                                                       03293515
+014570     EXIT.                                                        03293615
+014600                                                                  03293715
+024700*----------------------------------------------------------------*06712215
+024800 9999-EXIT.                                                       06712315
+024900*----------------------------------------------------------------*06712415
+025000                                                                  06712515
+025100     GOBACK.                                                      06712615
+025200
+025300     CONTINUE.                                                    03293315

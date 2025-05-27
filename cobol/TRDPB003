@@ -1,0 +1,160 @@
+000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. TRDPB002.                                            00020006
+000300***************************************************************** 00030000
+000400*                                                               * 00040000
+000500* TRDPB002 : Money Book-keeping Program                         * 00050006
+000600*                                                               * 00060000
+000700*  - Settles Securities Account of Buyer/Seller by crediting    * 00070000
+000800*    Seller Security Account and Debiting  Buyer Security       * 00080000
+000900*    Account                                                    * 00090000
+001000*                                                               * 00100000
+001100***************************************************************** 00110000
+001200 ENVIRONMENT DIVISION.                                            00120000
+001300 DATA DIVISION.                                                   00130000
+001400 WORKING-STORAGE SECTION.                                         00140000
+001500*                                                                 00150000
+001600 01  WS-SQLCODE                PIC  -(4).                         00160000
+001700 01  WS-SWITCHES.                                                 00170000
+001710     05 WS-CR-DB-SWTICH        PIC X.                             00171000
+001720        88 CREDIT-SELLER       VALUE 'D'.                         00172000
+001730        88 DEBIT-BUYER         VALUE 'C'.                         00173000
+001795 01  WS-PROG-ERROR-MSGS.                                          00179500
+002500     05  WS-EXCEPTION            PIC X(200).                      00250005
+004100*                                                                 00410000
+004210     EXEC SQL                                                     00421002
+004220         INCLUDE EXCPTION                                         00422002
+004230     END-EXEC                                                     00423002
+004300*                                                                 00430000
+004400     EXEC SQL                                                     00440000
+004500          INCLUDE SQLCA                                           00450000
+004600     END-EXEC                                                     00460000
+004700*                                                                 00470000
+004800     EXEC SQL                                                     00480000
+004900          INCLUDE TBTRDMAC                                        00490000
+005000     END-EXEC                                                     00500000
+005100*                                                                 00510000
+005200     EXEC SQL                                                     00520000
+005300          DECLARE MAC_BOOKING  CURSOR FOR                         00530000
+005400          SELECT  MAC_BALANCE                                     00540000
+005500            FROM TBTRDMAC                                         00550000
+005600            WHERE                                                 00560000
+005610                 MAC_CURRENCY      = :MAC-CURRENCY                00561000
+005620             AND MAC_NUMBER        = :MAC-NUMBER                  00562000
+005640            FOR UPDATE OF MAC_BALANCE                             00564000
+005650     END-EXEC                                                     00565000
+005660*                                                                 00566000
+005670 LINKAGE SECTION.                                                 00567000
+005680 COPY TRDORDER.                                                   00568000
+005690*                                                                 00569000
+005700 PROCEDURE DIVISION USING TRD-ORDER-PAIR.                         00570005
+005800                                                                  00580000
+005900 0000-MAINLINE.                                                   00590000
+006000                                                                  00600000
+007800* Set default to Booking Failed                                   00780000
+007900     SET TRD-MAC-BOOKING-FAILED TO TRUE                           00790000
+008000                                                                  00800000
+008100     SET  DEBIT-BUYER TO TRUE                                     00810000
+008200     PERFORM 1000-MAC-BOOKING                                     00820000
+008300        THRU 1000-EXIT                                            00830000
+008400                                                                  00840000
+008500     IF TRD-MAC-BOOKING-DONE THEN                                 00850000
+008600* Reset back to Booking Failed and attempt Crediting Seller       00860000
+008700        SET TRD-MAC-BOOKING-FAILED TO TRUE                        00870000
+008711        SET  CREDIT-SELLER TO TRUE                                00871100
+008720        PERFORM 1000-MAC-BOOKING                                  00872000
+008730           THRU 1000-EXIT                                         00873000
+008740     END-IF                                                       00874000
+008750                                                                  00875000
+008760     GOBACK                                                       00876005
+008790     .                                                            00879000
+008800*                                                                 00880000
+008900 1000-MAC-BOOKING.                                                00890000
+009000*                                                                 00900000
+009100     IF CREDIT-SELLER                                             00910000
+009200        MOVE TRD-CURRENCY             TO MAC-CURRENCY             00920000
+009300        MOVE TRD-SELLER-MONEY-ACC-NUM TO MAC-NUMBER               00930000
+009410     ELSE                                                         00941000
+009420        MOVE TRD-CURRENCY             TO MAC-CURRENCY             00942000
+009430        MOVE TRD-BUYER-MONEY-ACC-NUM  TO MAC-NUMBER               00943000
+009432     END-IF                                                       00943200
+009433*                                                                 00943300
+009434     EXEC SQL                                                     00943400
+009435         OPEN MAC_BOOKING                                         00943500
+009436     END-EXEC                                                     00943600
+009437*                                                                 00943700
+009438     IF SQLCODE NOT = 0 THEN                                      00943800
+009439        SET TRD-MAC-BOOKING-FAILED TO TRUE                        00943900
+009440        MOVE SQLCODE TO WS-SQLCODE                                00944000
+009450        SET DATA-EXCEPTION TO TRUE                                00945000
+009460        MOVE SPACES TO WS-EXCEPTION                               00946007
+009470        STRING                                                    00947000
+009480           'Open MAC_BOOKING Cursor failed : SQLCODE = '          00948000
+009490           WS-SQLCODE                                             00949000
+009500           DELIMITED BY SIZE                                      00950000
+009600          INTO WS-EXCEPTION                                       00960007
+009700        END-STRING                                                00970000
+009800        PERFORM 9000-REPORT-EXCEPTION                             00980000
+009810           THRU 9000-EXIT                                         00981004
+009900        GO TO 1000-EXIT                                           00990000
+010000     END-IF                                                       01000000
+010100*                                                                 01010000
+010200     EXEC SQL                                                     01020000
+010300         FETCH MAC_BOOKING                                        01030000
+010400          INTO :MAC-BALANCE                                       01040000
+010500     END-EXEC                                                     01050000
+010600*                                                                 01060000
+010700     IF SQLCODE = 0 THEN                                          01070000
+010800        IF CREDIT-SELLER                                          01080000
+010900           COMPUTE MAC-BALANCE = MAC-BALANCE + TRD-ORDER-AMOUNT   01090000
+011000        ELSE                                                      01100000
+011100           COMPUTE MAC-BALANCE = MAC-BALANCE - TRD-ORDER-AMOUNT   01110000
+011200        END-IF                                                    01120000
+011300        EXEC SQL                                                  01130000
+011400             UPDATE TBTRDMAC                                      01140000
+011500               SET MAC_BALANCE      = :MAC-BALANCE                01150000
+011600             WHERE MAC_CURRENCY     = :MAC-CURRENCY               01160009
+011610               AND MAC_NUMBER       = :MAC-NUMBER                 01161009
+011700        END-EXEC                                                  01170000
+011710*            WHERE CURRENT OF MAC_BOOKING                         01171008
+011800        IF SQLCODE = 0 THEN                                       01180000
+011900           SET TRD-MAC-BOOKING-DONE TO TRUE                       01190000
+012000        ELSE                                                      01200000
+012100           SET TRD-MAC-BOOKING-FAILED TO TRUE                     01210000
+012200           MOVE SQLCODE TO WS-SQLCODE                             01220000
+012300           SET DATA-EXCEPTION TO TRUE                             01230000
+012400           MOVE SPACES TO WS-EXCEPTION                            01240007
+012410           STRING                                                 01241000
+012420              'Update using MAC_BOOKING Cursor failed : '         01242000
+012430              'SQLCODE = '                                        01243000
+012431              WS-SQLCODE                                          01243100
+012432              DELIMITED BY SIZE                                   01243200
+012433             INTO WS-EXCEPTION                                    01243307
+012434           END-STRING                                             01243400
+012435           PERFORM 9000-REPORT-EXCEPTION                          01243500
+012436              THRU 9000-EXIT                                      01243604
+012437        END-IF                                                    01243700
+012438     ELSE                                                         01243800
+012439        SET TRD-MAC-BOOKING-FAILED TO TRUE                        01243900
+012440        MOVE SQLCODE TO WS-SQLCODE                                01244000
+012441        SET DATA-EXCEPTION TO TRUE                                01244100
+012450        MOVE SPACES TO WS-EXCEPTION                               01245007
+012460        STRING                                                    01246000
+012470           'Fetch MAC_BOOKING Cursor failed : SQLCODE = '         01247000
+012480           WS-SQLCODE                                             01248000
+012490           DELIMITED BY SIZE                                      01249000
+012500          INTO WS-EXCEPTION                                       01250007
+012600        END-STRING                                                01260000
+012700        PERFORM 9000-REPORT-EXCEPTION                             01270000
+012710           THRU 9000-EXIT                                         01271004
+012800     END-IF                                                       01280000
+012810     EXEC SQL                                                     01281003
+012820         CLOSE MAC_BOOKING                                        01282003
+012830     END-EXEC                                                     01283003
+012900     .                                                            01290000
+013000*                                                                 01300000
+013100 1000-EXIT.                                                       01310000
+013200     EXIT.                                                        01320000
+015300*                                                                 01530000
+015400     EXEC SQL                                                     01540000
+015500         INCLUDE EXCPCOPY                                         01550000
+015600     END-EXEC.                                                    01560000

@@ -1,0 +1,1376 @@
+000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. TRDPB000.                                            00020047
+000300***************************************************************** 00030001
+000400*                                                               * 00040001
+000500* TRDPB000 : Process Trading Orders                             * 00050047
+000600*                                                               * 00060001
+000700*  - Transaction starting this program is of format             * 00070001
+000800*    T<CurrencyCode> viz. TUSD, TINR, TCHF and so on.           * 00080001
+000900*  - This Program is the first series of programs that          * 00090001
+001000*    Validates & Matches Buy & Sell Side Orders.                * 00100001
+001100*  - Multi-threading of this process is based on running        * 00110001
+001200*    multiple background transactions for settling trades       * 00120001
+001300*    based on currency                                          * 00130001
+001400*  - Once trades are matched, Settlement batch for that         * 00140042
+001500*    trade currency should be done                              * 00150042
+001700*  - Any validation issues will be logged in TBTRDEXP table     * 00170042
+002100*                                                               * 00210001
+002200***************************************************************** 00220001
+002300 ENVIRONMENT DIVISION.                                            00230001
+002400 DATA DIVISION.                                                   00240001
+002500 WORKING-STORAGE SECTION.                                         00250001
+002600*                                                                 00260001
+002710 01  WS-ORDER-COUNT            PIC S9(9) COMP.                    00271008
+002800 01  WS-SQLCODE                PIC  -(4).                         00280001
+002900 01  WS-ACC-DISP               PIC  Z(9).                         00290003
+003200 01  WS-TRADEID                PIC 9(9).                          00320001
+003240 01  WS-STORAGE-LEN            PIC S9(8) COMP.                    00324035
+003250 01  TRD-ORDER-PAIR-PTR        USAGE POINTER.                     00325036
+003300*                                                                 00330001
+003400 01  WS-PROGRAMS.                                                 00340001
+003500     05 WS-CUSTOMER-CHECK      PIC X(8) VALUE 'MSTPB001'.         00350052
+003600     05 WS-SECURITY-CHECK      PIC X(8) VALUE 'MSTPB002'.         00360052
+003610*                                                                 00361048
+003620     EXEC SQL                                                     00362048
+003630          INCLUDE TBTRDSUM                                        00363048
+003640     END-EXEC                                                     00364048
+003700*                                                                 00370001
+003701     EXEC SQL                                                     00370130
+003710        INCLUDE SUMMCOPY                                          00371030
+003711     END-EXEC.                                                    00371130
+003780*                                                                 00378037
+003800 01  WS-SWITCHES.                                                 00380001
+003900     05 WS-ORDERS-SWITCH       PIC X VALUE ' '.                   00390001
+004000        88 NO-MORE-ORDERS      VALUE 'Y'.                         00400001
+004010     05 WS-RETRY-SWITCH        PIC X.                             00401026
+004020        88 DO-SQL              VALUE 'D'.                         00402028
+004021        88 RETRY-SQL           VALUE 'R'.                         00402128
+004030        88 SQL-DONE            VALUE 'S'.                         00403028
+004100     05 WS-ORDER-STATUS        PIC X(3).                          00410001
+004200        88 ACCEPTED                    VALUE '101'.               00420002
+004300        88 MATCHED                     VALUE '201'.               00430002
+004310        88 OVERDUE                     VALUE '301'                00431030
+004320                                        , '302' , '303' , '304'   00432030
+004330                                        , '305' , '306' , '307'   00433030
+004340                                        , '308'.                  00434030
+004400        88 OVERDUE-BUYER-ID-INVLD      VALUE '301'.               00440002
+004500        88 OVERDUE-SELLER-ID-INVLD     VALUE '302'.               00450002
+004600        88 OVERDUE-SECURITY-INVLD      VALUE '303'.               00460002
+004700        88 OVERDUE-BUYER-AC-INVLD      VALUE '304'.               00470002
+004800        88 OVERDUE-SELLER-AC-INVLD     VALUE '305'.               00480002
+004900        88 OVERDUE-BUYER-ORDSTA-INVLD  VALUE '306'.               00490002
+005000        88 OVERDUE-SELLER-ORDSTA-INVLD VALUE '307'.               00500002
+005100        88 OVERDUE-SELLER-ORD-MISSING  VALUE '308'.               00510003
+005110        88 REJECTED                    VALUE '401'.               00511031
+005200        88 SETTLED                     VALUE '601'.               00520002
+005300*                                                                 00530002
+005400 01  WS-PROGRAM-START-PARMS.                                      00540002
+005500     05  FILLER                   PIC  X(05).                     00550002
+005600     05  WS-INP-CHKP-FREQUENCY    PIC  X(05).                     00560002
+005700                                                                  00570002
+005800 01  WS-SD-PROGRAM-START-PARMS.                                   00580002
+005900     05  WS-SD-INP-CHKP-FREQUENCY    PIC  X(05).                  00590002
+006000     05  FILLER                      PIC  X(80).                  00600002
+006100                                                                  00610002
+006200 77  WS-SD-INPUT-LENGTH           PIC S9(4) COMP.                 00620002
+006210 77  WS-PARM-LEN                  PIC S9(4) COMP.                 00621007
+006900 01  WS-PROG-ERROR-MSGS.                                          00690002
+007000     05  WS-EXCEPTION            PIC X(200).                      00700042
+007100*                                                                 00710043
+007200 01 WS-SETTLMENT-QUEUE-TABLE.                                     00720043
+007300   05 WS-STQ-INDEX               PIC S9(4) COMP.                  00730043
+007400   05 WS-STQ-CURRENCY   OCCURS 100 TIMES   PIC X(3).              00740043
+007500   05 WS-STQ-TRDPAIR    OCCURS 100 TIMES   PIC X(88).             00750043
+009600*                                                                 00960002
+011100 COPY CUSTOMER REPLACING ==:T:== BY ==WS==.                       01110002
+011200*                                                                 01120002
+011300 COPY SECURITY  REPLACING ==:T:== BY ==WS==.                      01130006
+011400*                                                                 01140002
+011510     EXEC SQL                                                     01151014
+011520         INCLUDE EXCPTION                                         01152014
+011530     END-EXEC                                                     01153014
+011600*                                                                 01160002
+011700     EXEC SQL                                                     01170002
+011800          INCLUDE SQLCA                                           01180006
+011900     END-EXEC                                                     01190002
+012000*                                                                 01200002
+012001     EXEC SQL                                                     01200106
+012002          INCLUDE TBTRDORD                                        01200206
+012003     END-EXEC                                                     01200306
+012004*                                                                 01200406
+012010     EXEC SQL                                                     01201004
+012020          INCLUDE TBTRDSAC                                        01202004
+012030     END-EXEC                                                     01203004
+012040*                                                                 01204004
+012050     EXEC SQL                                                     01205004
+012060          INCLUDE TBTRDMAC                                        01206004
+012070     END-EXEC                                                     01207004
+012071*                                                                 01207143
+012072     EXEC SQL                                                     01207243
+012073          INCLUDE TBTRDSTQ                                        01207343
+012074     END-EXEC                                                     01207443
+012080*                                                                 01208004
+012090     EXEC SQL                                                     01209046
+012091          INCLUDE TBTRDLOG                                        01209146
+012092     END-EXEC                                                     01209246
+012093*                                                                 01209346
+012100     EXEC SQL                                                     01210002
+012200          DECLARE BUY_SIDE_ORDERS CURSOR WITH HOLD FOR            01220021
+012300          SELECT  ORD_TRADEID                                     01230002
+012400                 ,ORD_BUY_SELL_IND                                01240002
+012500                 ,ORD_CUSTOMER_ID                                 01250002
+012600                 ,ORD_FIGI                                        01260002
+012700                 ,ORD_QUANTITY                                    01270002
+012800                 ,ORD_CURRENCY                                    01280002
+012900                 ,ORD_AMOUNT                                      01290018
+012910            FROM TBTRDORD                                         01291004
+013000            WHERE                                                 01300002
+013100                 ORD_CURRENCY      = :ORD-CURRENCY                01310002
+013200             AND ORD_TRADING_XCHNG = :ORD-TRADING-XCHNG           01320002
+013300             AND ORD_BUY_SELL_IND  = 'B'                          01330002
+013400             AND ORD_STATUS        = :ORD-STATUS                  01340002
+013700     END-EXEC                                                     01370002
+013710*         WITH UR                                                 01371060
+013800                                                                  01380002
+014100*                                                                 01410033
+014110 COPY TRDORDER.                                                   01411033
+014111*                                                                 01411142
+014112 LINKAGE SECTION.                                                 01411242
+014114 01 LK-PARM.                                                      01411442
+014115    05 LK-PARM-LEN            PIC  S9(4) COMP.                    01411542
+014116    05 LK-CURRENCY            PIC  X(3).                          01411642
+014117       88 VALID-CURRENCY      VALUE                               01411742
+014118             'CAD' , 'CHF' , 'CNY' , 'EUR' , 'GBX' ,              01411850
+014119             'INR' , 'JPY' , 'KRW' , 'MXN' , 'USD'.               01411950
+014128    05 FILLER                 PIC  X(1).                          01412842
+014129    05 LK-CHKP-FREQUENCY      PIC  9(4).                          01412942
+014130*                                                                 01413033
+014200 PROCEDURE DIVISION USING LK-PARM.                                01420042
+014300                                                                  01430001
+014400 0000-MAINLINE.                                                   01440001
+014500                                                                  01450001
+014600* Validate Currency                                               01460042
+014700     IF VALID-CURRENCY THEN                                       01470051
+014800        CONTINUE                                                  01480051
+014900     ELSE                                                         01490051
+014910        SET SYSTEM-EXCEPTION TO TRUE                              01491051
+014911        MOVE SPACES          TO WS-EXCEPTION                      01491151
+014912        STRING                                                    01491251
+014913             LK-CURRENCY                                          01491351
+014914             ' : '                                                01491451
+014915             'Currency parameter passed is invalid'               01491551
+014916          DELIMITED BY SIZE                                       01491651
+014917          INTO WS-EXCEPTION                                       01491751
+014918        END-STRING                                                01491851
+014920        PERFORM 9000-REPORT-EXCEPTION                             01492051
+014930           THRU 9000-EXIT                                         01493051
+015000     END-IF                                                       01500051
+016000* Default Chkpt frequency is 100                                  01600001
+016010     IF LK-CHKP-FREQUENCY < 100 THEN                              01601042
+016100        MOVE 100 TO LK-CHKP-FREQUENCY                             01610042
+016200     END-IF                                                       01620042
+020800                                                                  02080001
+020801* Log Start timestamp                                             02080146
+020802     INITIALIZE DCLTBTRDLOG                                       02080246
+020803     MOVE 'ACCEPTANCE'                  TO LOG-TRANSACTION        02080346
+020804     MOVE LK-CURRENCY                   TO LOG-CURRENCY           02080446
+020805     ACCEPT WS-CURRDATE        FROM DATE YYYYMMDD                 02080557
+020806     ACCEPT WS-CURRTIME        FROM TIME                          02080657
+020807     MOVE SPACES TO LOG-START-TS                                  02080757
+020808     STRING                                                       02080857
+020809         WS-CURRDATE(1:4)                                         02080957
+020810         '-'                                                      02081057
+020811         WS-CURRDATE(5:2)                                         02081157
+020812         '-'                                                      02081257
+020813         WS-CURRDATE(7:2)                                         02081359
+020814         ' '                                                      02081457
+020815         WS-CURRTIME(1:2)                                         02081557
+020816         ':'                                                      02081657
+020817         WS-CURRTIME(3:2)                                         02081757
+020818         ':'                                                      02081857
+020819         WS-CURRTIME(5:2)                                         02081957
+020820       DELIMITED BY SIZE                                          02082057
+020821      INTO LOG-START-TS                                           02082157
+020822     END-STRING                                                   02082257
+020823*    EXEC SQL                                                     02082357
+020824*       SET :LOG-START-TS = CURRENT_TIMESTAMP                     02082457
+020825*    END-EXEC                                                     02082557
+020826*                                                                 02082658
+020827*    IF SQLCODE NOT = 0 THEN                                      02082758
+020828*       MOVE SQLCODE TO WS-SQLCODE                                02082858
+020829*       SET APPL-EXCEPTION TO TRUE                                02082958
+020830*       MOVE SPACES TO WS-EXCEPTION                               02083058
+020831*       STRING                                                    02083158
+020832*          'LOG Set Start Timestamp failed : SQLCODE = '          02083258
+020833*          WS-SQLCODE                                             02083358
+020834*          DELIMITED BY SIZE                                      02083458
+020835*         INTO WS-EXCEPTION                                       02083558
+020836*       END-STRING                                                02083658
+020837*       PERFORM 9000-REPORT-EXCEPTION                             02083758
+020838*          THRU 9000-EXIT                                         02083858
+020839*    END-IF                                                       02083958
+020840                                                                  02084057
+020900     PERFORM 1000-ORDER-ACCEPTANCE                                02090001
+021000        THRU 1000-EXIT                                            02100006
+021120                                                                  02112037
+021121     ACCEPT WS-CURRDATE        FROM DATE YYYYMMDD                 02112157
+021122     ACCEPT WS-CURRTIME        FROM TIME                          02112257
+021123     MOVE SPACES TO LOG-END-TS                                    02112357
+021124     STRING                                                       02112457
+021125         WS-CURRDATE(1:4)                                         02112557
+021126         '-'                                                      02112657
+021127         WS-CURRDATE(5:2)                                         02112757
+021128         '-'                                                      02112857
+021129         WS-CURRDATE(7:2)                                         02112959
+021130         ' '                                                      02113057
+021131         WS-CURRTIME(1:2)                                         02113157
+021132         ':'                                                      02113257
+021133         WS-CURRTIME(3:2)                                         02113357
+021134         ':'                                                      02113457
+021135         WS-CURRTIME(5:2)                                         02113557
+021136       DELIMITED BY SIZE                                          02113657
+021137      INTO LOG-END-TS                                             02113757
+021138     END-STRING                                                   02113857
+021139*    EXEC SQL                                                     02113957
+021140*       SET :LOG-END-TS = CURRENT_TIMESTAMP                       02114057
+021141*    END-EXEC                                                     02114157
+021142*                                                                 02114258
+021143*    IF SQLCODE NOT = 0 THEN                                      02114358
+021144*       MOVE SQLCODE TO WS-SQLCODE                                02114458
+021145*       SET APPL-EXCEPTION TO TRUE                                02114558
+021146*       MOVE SPACES TO WS-EXCEPTION                               02114658
+021147*       STRING                                                    02114758
+021148*          'LOG Set End Timestamp failed : SQLCODE = '            02114858
+021149*          WS-SQLCODE                                             02114958
+021150*          DELIMITED BY SIZE                                      02115058
+021151*         INTO WS-EXCEPTION                                       02115158
+021152*       END-STRING                                                02115258
+021153*       PERFORM 9000-REPORT-EXCEPTION                             02115358
+021154*          THRU 9000-EXIT                                         02115458
+021155*    END-IF                                                       02115558
+021156                                                                  02115646
+021157     EXEC SQL                                                     02115746
+021158        INSERT INTO TBTRDLOG                                      02115846
+021159        VALUES (                                                  02115946
+021160          :LOG-TRANSACTION                                        02116046
+021161         ,:LOG-CURRENCY                                           02116146
+021162         ,:LOG-START-TS                                           02116246
+021163         ,:LOG-END-TS                                             02116346
+021164        )                                                         02116446
+021165     END-EXEC                                                     02116546
+021166                                                                  02116646
+021167     EVALUATE TRUE                                                02116753
+021168        WHEN SQLCODE = 0                                          02116854
+021169             CONTINUE                                             02116953
+021170        WHEN SQLCODE = -803                                       02117054
+021171             EXEC SQL                                             02117153
+021172                UPDATE TBTRDLOG                                   02117253
+021173                  SET LOG_END_TS = :LOG-END-TS                    02117353
+021174                WHERE LOG_TRANSACTION = :LOG-TRANSACTION          02117453
+021175                  AND LOG_CURRENCY    = :LOG-CURRENCY             02117553
+021176             END-EXEC                                             02117653
+021177             IF SQLCODE NOT = 0 THEN                              02117753
+021178                MOVE SQLCODE TO WS-SQLCODE                        02117853
+021179                SET APPL-EXCEPTION TO TRUE                        02117953
+021180                MOVE SPACES TO WS-EXCEPTION                       02118053
+021181                STRING                                            02118153
+021182                   'LOG Update Failed : SQLCODE = '               02118253
+021183                   WS-SQLCODE                                     02118353
+021184                   DELIMITED BY SIZE                              02118453
+021185                  INTO WS-EXCEPTION                               02118553
+021186                END-STRING                                        02118653
+021187                PERFORM 9000-REPORT-EXCEPTION                     02118753
+021188                   THRU 9000-EXIT                                 02118853
+021189             END-IF                                               02118953
+021190        WHEN OTHER                                                02119053
+021191              MOVE SQLCODE TO WS-SQLCODE                          02119153
+021192              SET APPL-EXCEPTION TO TRUE                          02119253
+021193              MOVE SPACES TO WS-EXCEPTION                         02119353
+021194              STRING                                              02119453
+021195                 'LOG Insert Failed : SQLCODE = '                 02119553
+021196                 WS-SQLCODE                                       02119653
+021197                 DELIMITED BY SIZE                                02119753
+021198                INTO WS-EXCEPTION                                 02119853
+021199              END-STRING                                          02119953
+021200              PERFORM 9000-REPORT-EXCEPTION                       02120053
+021201                 THRU 9000-EXIT                                   02120153
+021202     END-EVALUATE                                                 02120253
+021210                                                                  02121046
+021220*                                                                 02122061
+021230     EXEC SQL                                                     02123061
+021240         COMMIT                                                   02124061
+021250     END-EXEC.                                                    02125061
+021260*                                                                 02126061
+021300     GOBACK.                                                      02130042
+021600*                                                                 02160001
+021700 1000-ORDER-ACCEPTANCE.                                           02170001
+021800*                                                                 02180001
+022100     MOVE LK-CURRENCY      TO ORD-CURRENCY                        02210042
+022110     PERFORM VARYING WS-STQ-INDEX                                 02211043
+022120        FROM 1 BY 1                                               02212043
+022130        UNTIL WS-STQ-INDEX > 100                                  02213043
+022140        MOVE LK-CURRENCY   TO WS-STQ-CURRENCY(WS-STQ-INDEX)       02214043
+022150     END-PERFORM                                                  02215043
+022160*                                                                 02216043
+022170     MOVE 0 TO WS-STQ-INDEX                                       02217043
+022200*                                                                 02220001
+022300     EVALUATE ORD-CURRENCY                                        02230001
+022400         WHEN 'EUR'                                               02240001
+022500              MOVE 'DAX'       TO ORD-TRADING-XCHNG               02250001
+022600         WHEN 'USD'                                               02260001
+022700              MOVE 'NYSE'      TO ORD-TRADING-XCHNG               02270001
+022800         WHEN 'CAD'                                               02280001
+022900              MOVE 'TSX'       TO ORD-TRADING-XCHNG               02290001
+023000         WHEN 'CNY'                                               02300001
+023100              MOVE 'SSE'       TO ORD-TRADING-XCHNG               02310001
+023200         WHEN 'INR'                                               02320001
+023300              MOVE 'BSE'       TO ORD-TRADING-XCHNG               02330001
+023400         WHEN 'CHF'                                               02340001
+023500              MOVE 'SWX'       TO ORD-TRADING-XCHNG               02350001
+023600         WHEN 'JPY'                                               02360001
+023700              MOVE 'TSE'       TO ORD-TRADING-XCHNG               02370001
+023800         WHEN 'MXN'                                               02380001
+023900              MOVE 'BMV'       TO ORD-TRADING-XCHNG               02390001
+024000         WHEN 'KRW'                                               02400001
+024100              MOVE 'KRX'       TO ORD-TRADING-XCHNG               02410001
+024200         WHEN 'GBX'                                               02420001
+024300              MOVE 'FTSE'      TO ORD-TRADING-XCHNG               02430001
+024400     END-EVALUATE                                                 02440001
+024500*                                                                 02450001
+024600     SET  ACCEPTED          TO TRUE                               02460001
+024700     MOVE WS-ORDER-STATUS   TO ORD-STATUS                         02470001
+024800*                                                                 02480001
+024900     EXEC SQL                                                     02490001
+025000         OPEN BUY_SIDE_ORDERS                                     02500001
+025100     END-EXEC                                                     02510001
+025200*                                                                 02520001
+025300     IF SQLCODE NOT = 0 THEN                                      02530001
+025400        MOVE SQLCODE TO WS-SQLCODE                                02540001
+025500        SET APPL-EXCEPTION TO TRUE                                02550001
+025600        MOVE SPACES TO WS-EXCEPTION                               02560042
+025700        STRING                                                    02570001
+025800           'Open BUY_SIDE_ORDERS Cursor failed : SQLCODE = '      02580001
+025900           WS-SQLCODE                                             02590001
+026000           DELIMITED BY SIZE                                      02600001
+026100          INTO WS-EXCEPTION                                       02610042
+026200        END-STRING                                                02620001
+026300        PERFORM 9000-REPORT-EXCEPTION                             02630001
+026310           THRU 9000-EXIT                                         02631023
+026400     END-IF                                                       02640001
+026500*                                                                 02650001
+026600     EXEC SQL                                                     02660001
+026700         FETCH BUY_SIDE_ORDERS                                    02670001
+026800          INTO :ORD-TRADEID                                       02680001
+026900              ,:ORD-BUY-SELL-IND                                  02690004
+027000              ,:ORD-CUSTOMER-ID                                   02700001
+027100              ,:ORD-FIGI                                          02710001
+027200              ,:ORD-QUANTITY                                      02720001
+027300              ,:ORD-CURRENCY                                      02730001
+027400              ,:ORD-AMOUNT                                        02740001
+027500     END-EXEC                                                     02750001
+027600*                                                                 02760001
+027700     IF SQLCODE = 100   THEN                                      02770001
+027800        MOVE SQLCODE TO WS-SQLCODE                                02780001
+027810        SET NO-MORE-ORDERS TO TRUE                                02781040
+027900        SET DATA-EXCEPTION TO TRUE                                02790040
+028000        MOVE SPACES TO WS-EXCEPTION                               02800042
+028100        STRING                                                    02810001
+028200           'No BUY_SIDE_ORDERS to Settle '                        02820001
+028300          DELIMITED BY SIZE                                       02830001
+028400          INTO WS-EXCEPTION                                       02840042
+028500        END-STRING                                                02850001
+028600        PERFORM 9000-REPORT-EXCEPTION                             02860001
+028610           THRU 9000-EXIT                                         02861023
+028700     END-IF                                                       02870001
+028800*                                                                 02880001
+028810     MOVE 0 TO WS-ORDER-COUNT                                     02881008
+028820*                                                                 02882008
+028900     PERFORM UNTIL NO-MORE-ORDERS                                 02890001
+029000*                                                                 02900002
+029010         ADD 1 TO WS-ORDER-COUNT                                  02901008
+029100         SET NO-EXCEPTIONS  TO TRUE                               02910002
+029200*                                                                 02920002
+029300         MOVE ORD-TRADING-XCHNG TO TRD-EXCHANGE                   02930002
+029400         MOVE ORD-CUSTOMER-ID   TO TRD-BUYER-ID                   02940002
+029500         MOVE ORD-TRADEID       TO TRD-ORDER-ID                   02950002
+029600         MOVE ORD-FIGI          TO TRD-FIGI                       02960002
+029700         MOVE ORD-QUANTITY      TO TRD-ORDER-QTY                  02970002
+029800         MOVE ORD-CURRENCY      TO TRD-CURRENCY                   02980002
+029900         MOVE ORD-AMOUNT        TO TRD-ORDER-AMOUNT               02990002
+030500*                                                                 03050002
+030580*                                                                 03058069
+030600         PERFORM 5000-GET-SELL-SIDE-ORDER                         03060002
+030700            THRU 5000-EXIT                                        03070002
+030800*                                                                 03080002
+030900         IF NO-EXCEPTIONS                                         03090002
+031000            PERFORM 5001-VALIDATE-CUSTOMERS                       03100002
+031100               THRU 5001-EXIT                                     03110002
+031200         END-IF                                                   03120002
+031300*                                                                 03130002
+031400         IF NO-EXCEPTIONS                                         03140002
+031500            PERFORM 5002-VALIDATE-SECURITY                        03150002
+031600               THRU 5002-EXIT                                     03160002
+031700         END-IF                                                   03170002
+031800*                                                                 03180002
+031900         IF NO-EXCEPTIONS                                         03190002
+032000            PERFORM 5003-BUYER-SEC-ACCOUNT                        03200002
+032100               THRU 5003-EXIT                                     03210002
+032200         END-IF                                                   03220002
+032300*                                                                 03230002
+032400         IF NO-EXCEPTIONS                                         03240002
+032500            PERFORM 5004-SELLER-SEC-ACCOUNT                       03250003
+032600               THRU 5004-EXIT                                     03260002
+032700         END-IF                                                   03270002
+032800*                                                                 03280002
+032900         IF NO-EXCEPTIONS                                         03290002
+033000            PERFORM 5005-BUYER-MONEY-ACCOUNT                      03300002
+033100               THRU 5005-EXIT                                     03310002
+033200         END-IF                                                   03320002
+033300*                                                                 03330002
+033400         IF NO-EXCEPTIONS                                         03340002
+033500            PERFORM 5006-SELLER-MONEY-ACCOUNT                     03350003
+033600               THRU 5006-EXIT                                     03360002
+033700         END-IF                                                   03370002
+033800*                                                                 03380002
+033810         IF NO-EXCEPTIONS                                         03381008
+033900            PERFORM 5007-UPDATE-ORDER-MATCHED                     03390008
+034000               THRU 5007-EXIT                                     03400008
+034001*                                                                 03400143
+034002            PERFORM 5008-WRITE-TO-STLMT-QUEUE                     03400243
+034003               THRU 5008-EXIT                                     03400343
+034031*                                                                 03403108
+034032            IF  WS-ORDER-COUNT >= LK-CHKP-FREQUENCY               03403242
+034033                EXEC SQL                                          03403342
+034034                     COMMIT                                       03403442
+034035                END-EXEC                                          03403508
+034036                MOVE 0 TO WS-ORDER-COUNT                          03403608
+034037            END-IF                                                03403708
+034040         END-IF                                                   03404008
+034100*                                                                 03410002
+034200         EXEC SQL                                                 03420002
+034300             FETCH BUY_SIDE_ORDERS                                03430002
+034400              INTO :ORD-TRADEID                                   03440004
+034410                  ,:ORD-BUY-SELL-IND                              03441004
+034500                  ,:ORD-CUSTOMER-ID                               03450002
+034600                  ,:ORD-FIGI                                      03460002
+034700                  ,:ORD-QUANTITY                                  03470002
+034800                  ,:ORD-CURRENCY                                  03480002
+034900                  ,:ORD-AMOUNT                                    03490002
+035000         END-EXEC                                                 03500002
+035100*                                                                 03510002
+035200         EVALUATE TRUE                                            03520007
+035300            WHEN SQLCODE = 0                                      03530002
+035400                 CONTINUE                                         03540002
+035500            WHEN SQLCODE = 100                                    03550002
+035600                 SET NO-MORE-ORDERS TO TRUE                       03560002
+035700            WHEN OTHER                                            03570002
+035800               MOVE SQLCODE TO WS-SQLCODE                         03580002
+035900               SET APPL-EXCEPTION TO TRUE                         03590002
+036000               MOVE SPACES TO WS-EXCEPTION                        03600042
+036100               STRING                                             03610002
+036200                  'Fetch BUY_SIDE_ORDERS failed : SQLCODE = '     03620019
+036300                  WS-SQLCODE                                      03630020
+036400                  DELIMITED BY SIZE                               03640002
+036500                 INTO WS-EXCEPTION                                03650042
+036600               END-STRING                                         03660002
+036700               PERFORM 9000-REPORT-EXCEPTION                      03670002
+036710                  THRU 9000-EXIT                                  03671023
+036800         END-EVALUATE                                             03680002
+036900     END-PERFORM                                                  03690002
+036906                                                                  03690643
+036907     EXEC SQL                                                     03690743
+036908         CLOSE BUY_SIDE_ORDERS                                    03690843
+036916     END-EXEC                                                     03691643
+036917                                                                  03691743
+036918     EVALUATE TRUE                                                03691843
+036919        WHEN SQLCODE = 0                                          03691943
+036920             CONTINUE                                             03692043
+036923        WHEN OTHER                                                03692343
+036924           MOVE SQLCODE TO WS-SQLCODE                             03692443
+036925           SET APPL-EXCEPTION TO TRUE                             03692543
+036926           MOVE SPACES TO WS-EXCEPTION                            03692643
+036927           STRING                                                 03692743
+036928              'Close BUY_SIDE_ORDERS failed : SQLCODE = '         03692843
+036929              WS-SQLCODE                                          03692943
+036930              DELIMITED BY SIZE                                   03693043
+036931             INTO WS-EXCEPTION                                    03693143
+036932           END-STRING                                             03693243
+036933           PERFORM 9000-REPORT-EXCEPTION                          03693343
+036934              THRU 9000-EXIT                                      03693443
+036935     END-EVALUATE                                                 03693543
+036936*                                                                 03693643
+036937     IF WS-STQ-INDEX > 0   THEN                                   03693743
+036938        PERFORM 5009-INSERT-TO-STQ                                03693843
+036939           THRU 5009-EXIT                                         03693943
+036940     END-IF                                                       03694043
+036941*                                                                 03694143
+036942     EXEC SQL                                                     03694243
+036943         COMMIT                                                   03694343
+036944     END-EXEC                                                     03694443
+036950     .                                                            03695003
+037000*                                                                 03700002
+037100 1000-EXIT.                                                       03710006
+037200*                                                                 03720002
+037300     EXIT.                                                        03730002
+037400                                                                  03740002
+037500                                                                  03750002
+037600 5000-GET-SELL-SIDE-ORDER.                                        03760002
+037700*                                                                 03770002
+037800     MOVE 'S' TO ORD-BUY-SELL-IND                                 03780007
+037900*                                                                 03790002
+038000     EXEC SQL                                                     03800002
+038100         SELECT                                                   03810002
+038200               ORD_CUSTOMER_ID                                    03820002
+038300             , ORD_STATUS                                         03830002
+038400          INTO :ORD-CUSTOMER-ID                                   03840002
+038500              ,:ORD-STATUS                                        03850002
+038600          FROM TBTRDORD                                           03860002
+038700          WHERE                                                   03870002
+038800                ORD_CURRENCY      = :ORD-CURRENCY                 03880002
+038900          AND   ORD_TRADING_XCHNG = :ORD-TRADING-XCHNG            03890002
+039000          AND   ORD_TRADEID       = :ORD-TRADEID                  03900002
+039100          AND   ORD_FIGI          = :ORD-FIGI                     03910002
+039200          AND   ORD_BUY_SELL_IND  = :ORD-BUY-SELL-IND             03920002
+039210          WITH UR                                                 03921027
+039300     END-EXEC.                                                    03930002
+039400                                                                  03940002
+039500     EVALUATE SQLCODE                                             03950002
+039600         WHEN 0                                                   03960002
+039700              MOVE ORD-STATUS TO WS-ORDER-STATUS                  03970002
+039800              IF ACCEPTED THEN                                    03980002
+039900                 MOVE ORD-CUSTOMER-ID TO TRD-SELLER-ID            03990002
+040000                 CONTINUE                                         04000002
+040100              ELSE                                                04010002
+040200                 SET DATA-EXCEPTION TO TRUE                       04020002
+040300                 MOVE ORD-TRADEID TO WS-TRADEID                   04030002
+040400                 MOVE SPACES TO WS-EXCEPTION                      04040042
+040500                 STRING                                           04050002
+040600                    'TradeId = ' WS-TRADEID ' : '                 04060056
+040700                    'Rejected - Reason : Seller Side Order '      04070002
+040800                    'Status Invalid - Order Status = '            04080002
+040900                    WS-ORDER-STATUS                               04090002
+041000                   DELIMITED BY SIZE                              04100002
+041100                   INTO WS-EXCEPTION                              04110042
+041200                 END-STRING                                       04120002
+041300                 PERFORM 9000-REPORT-EXCEPTION                    04130002
+041310                    THRU 9000-EXIT                                04131023
+041400*                                                                 04140002
+041500*                Update Buyer side order to Overdue               04150003
+041600*                                                                 04160002
+041700                 SET OVERDUE-SELLER-ORDSTA-INVLD TO TRUE          04170003
+041800                 MOVE WS-ORDER-STATUS TO ORD-STATUS               04180002
+041900*                                                                 04190002
+042000                 MOVE TRD-CURRENCY    TO ORD-CURRENCY             04200002
+042100                 MOVE TRD-EXCHANGE    TO ORD-TRADING-XCHNG        04210002
+042200                 MOVE TRD-ORDER-ID    TO ORD-TRADEID              04220002
+042300                 MOVE TRD-FIGI        TO ORD-FIGI                 04230002
+042400                 MOVE 'B'             TO ORD-BUY-SELL-IND         04240002
+042500                 PERFORM 8000-UPDATE-ORDER                        04250002
+042600                    THRU 8000-EXIT                                04260002
+042700              END-IF                                              04270002
+042800         WHEN 100                                                 04280002
+042900               SET DATA-EXCEPTION TO TRUE                         04290003
+043000               MOVE ORD-TRADEID TO WS-TRADEID                     04300003
+043100               MOVE SPACES TO WS-EXCEPTION                        04310042
+043200               STRING                                             04320003
+043300                  'TradeId = ' WS-TRADEID ' : '                   04330056
+043400                  'Rejected - Reason : Seller Side Order '        04340003
+043500                  'Not Found '                                    04350003
+043600                 DELIMITED BY SIZE                                04360003
+043700                 INTO WS-EXCEPTION                                04370042
+043800               END-STRING                                         04380003
+043900               PERFORM 9000-REPORT-EXCEPTION                      04390003
+043910                  THRU 9000-EXIT                                  04391023
+044000*                                                                 04400003
+044100*              Update Buyer side order to Overdue                 04410003
+044200*                                                                 04420003
+044300               SET OVERDUE-SELLER-ORD-MISSING TO TRUE             04430003
+044400               MOVE WS-ORDER-STATUS TO ORD-STATUS                 04440003
+044500*                                                                 04450003
+044600               MOVE TRD-CURRENCY      TO ORD-CURRENCY             04460003
+044700               MOVE TRD-EXCHANGE      TO ORD-TRADING-XCHNG        04470003
+044800               MOVE TRD-ORDER-ID      TO ORD-TRADEID              04480003
+044900               MOVE TRD-FIGI          TO ORD-FIGI                 04490003
+045000               MOVE 'B'               TO ORD-BUY-SELL-IND         04500003
+045100               PERFORM 8000-UPDATE-ORDER                          04510003
+045200                  THRU 8000-EXIT                                  04520003
+045300         WHEN OTHER                                               04530003
+045400              SET APPL-EXCEPTION TO TRUE                          04540003
+045500              MOVE ORD-TRADEID TO WS-TRADEID                      04550003
+045600              MOVE SPACES TO WS-EXCEPTION                         04560042
+045700              STRING                                              04570003
+045800                 'Seller Order Select Failed - SQLCODE = '        04580003
+045900                 WS-SQLCODE                                       04590003
+046000                DELIMITED BY SIZE                                 04600003
+046100                INTO WS-EXCEPTION                                 04610042
+046200              END-STRING                                          04620003
+046300              PERFORM 9000-REPORT-EXCEPTION                       04630003
+046310                 THRU 9000-EXIT                                   04631023
+046400     END-EVALUATE                                                 04640002
+046410     .                                                            04641006
+046500                                                                  04650002
+046600 5000-EXIT.                                                       04660002
+046700*                                                                 04670002
+046800     EXIT.                                                        04680002
+046900*                                                                 04690002
+047000 5001-VALIDATE-CUSTOMERS.                                         04700002
+047100*                                                                 04710002
+047200* Validate Buyer                                                  04720002
+047300*                                                                 04730002
+047310     SET ACCEPTED TO TRUE                                         04731009
+047320*                                                                 04732009
+047400     INITIALIZE WS-CUSTOMER-IO                                    04740002
+047500     MOVE TRD-BUYER-ID     TO WS-CUSTOMER-ID                      04750002
+047510     CALL WS-CUSTOMER-CHECK                                       04751042
+047520          USING WS-CUSTOMER-IO                                    04752042
+047530     END-CALL                                                     04753042
+049600*                                                                 04960002
+049700     EVALUATE TRUE                                                04970002
+049800        WHEN 88-CUSTOMER-ACTIVE                                   04980002
+049900             CONTINUE                                             04990002
+050000        WHEN 88-CUSTOMER-NOT-FOUND                                05000002
+050100            SET DATA-EXCEPTION TO TRUE                            05010002
+050200            MOVE ORD-TRADEID TO WS-TRADEID                        05020002
+050300            MOVE SPACES TO WS-EXCEPTION                           05030042
+050400            STRING                                                05040002
+050500               'TradeId = ' WS-TRADEID ' : '                      05050056
+050600               'Rejected - Reason : Customer '                    05060002
+050700               ORD-CUSTOMER-ID ' Not found'                       05070002
+050800              DELIMITED BY SIZE                                   05080002
+050900              INTO WS-EXCEPTION                                   05090042
+051000            END-STRING                                            05100002
+051100            PERFORM 9000-REPORT-EXCEPTION                         05110002
+051110               THRU 9000-EXIT                                     05111023
+051200                                                                  05120002
+051300        WHEN 88-CUSTOMER-INACTIVE                                 05130002
+051400            SET DATA-EXCEPTION TO TRUE                            05140002
+051500            MOVE ORD-TRADEID TO WS-TRADEID                        05150002
+051600            MOVE SPACES TO WS-EXCEPTION                           05160042
+051700            STRING                                                05170002
+051800               'TradeId = ' WS-TRADEID ' : '                      05180056
+051900               'Rejected - Reason : Customer '                    05190002
+052000               ORD-CUSTOMER-ID ' Not Active'                      05200002
+052100              DELIMITED BY SIZE                                   05210002
+052200              INTO WS-EXCEPTION                                   05220042
+052300            END-STRING                                            05230002
+052400            PERFORM 9000-REPORT-EXCEPTION                         05240002
+052401               THRU 9000-EXIT                                     05240123
+052410        WHEN 88-CUSTOMER-EXCEPTION                                05241009
+052420            SET APPL-EXCEPTION TO TRUE                            05242009
+052421            MOVE WS-CUSTOMER-ERROR-MSG TO WS-EXCEPTION            05242142
+052493            PERFORM 9000-REPORT-EXCEPTION                         05249309
+052494               THRU 9000-EXIT                                     05249423
+052500     END-EVALUATE                                                 05250002
+052600     IF 88-CUSTOMER-ACTIVE THEN                                   05260002
+052700        CONTINUE                                                  05270002
+052800     ELSE                                                         05280002
+052900* Update Buyer/Seller Order status                                05290002
+053000            SET OVERDUE-BUYER-ID-INVLD     TO TRUE                05300002
+053200*                                                                 05320002
+054400     END-IF                                                       05440002
+054500*                                                                 05450002
+054600* Validate Seller                                                 05460002
+054700*                                                                 05470002
+054800     INITIALIZE WS-CUSTOMER-IO                                    05480002
+054900     MOVE TRD-SELLER-ID    TO WS-CUSTOMER-ID                      05490002
+055000     CALL WS-CUSTOMER-CHECK                                       05500042
+055010          USING WS-CUSTOMER-IO                                    05501042
+055020     END-CALL                                                     05502042
+057000*                                                                 05700002
+057100     EVALUATE TRUE                                                05710002
+057200        WHEN 88-CUSTOMER-ACTIVE                                   05720002
+057300             CONTINUE                                             05730002
+057400        WHEN 88-CUSTOMER-NOT-FOUND                                05740002
+057500            SET DATA-EXCEPTION TO TRUE                            05750002
+057600            MOVE ORD-TRADEID TO WS-TRADEID                        05760002
+057700            MOVE SPACES TO WS-EXCEPTION                           05770042
+057800            STRING                                                05780002
+057900               'TradeId = ' WS-TRADEID ' : '                      05790056
+058000               'Rejected - Reason : Customer '                    05800002
+058100               ORD-CUSTOMER-ID ' Not found'                       05810002
+058200              DELIMITED BY SIZE                                   05820002
+058300              INTO WS-EXCEPTION                                   05830042
+058400            END-STRING                                            05840002
+058500            PERFORM 9000-REPORT-EXCEPTION                         05850002
+058510               THRU 9000-EXIT                                     05851023
+058600                                                                  05860002
+058700        WHEN 88-CUSTOMER-INACTIVE                                 05870002
+058800            SET DATA-EXCEPTION TO TRUE                            05880002
+058900            MOVE ORD-TRADEID TO WS-TRADEID                        05890002
+059000            MOVE SPACES TO WS-EXCEPTION                           05900042
+059100            STRING                                                05910002
+059200               'TradeId = ' WS-TRADEID ' : '                      05920056
+059300               'Rejected - Reason : Customer '                    05930002
+059400               ORD-CUSTOMER-ID ' Not Active'                      05940002
+059500              DELIMITED BY SIZE                                   05950002
+059600              INTO WS-EXCEPTION                                   05960042
+059700            END-STRING                                            05970002
+059800            PERFORM 9000-REPORT-EXCEPTION                         05980002
+059801               THRU 9000-EXIT                                     05980123
+059810        WHEN 88-CUSTOMER-EXCEPTION                                05981009
+059820            SET APPL-EXCEPTION TO TRUE                            05982009
+059830            MOVE WS-CUSTOMER-ERROR-MSG TO WS-EXCEPTION            05983042
+059840            PERFORM 9000-REPORT-EXCEPTION                         05984009
+059850               THRU 9000-EXIT                                     05985023
+059900     END-EVALUATE                                                 05990002
+060000     IF 88-CUSTOMER-ACTIVE THEN                                   06000002
+060100        CONTINUE                                                  06010002
+060200     ELSE                                                         06020002
+060300* Update Buyer/Seller Order status                                06030002
+060400        SET OVERDUE-SELLER-ID-INVLD    TO TRUE                    06040009
+061800     END-IF                                                       06180002
+061801*                                                                 06180109
+061802     IF OVERDUE-BUYER-ID-INVLD OR OVERDUE-SELLER-ID-INVLD         06180209
+061803        MOVE WS-ORDER-STATUS TO ORD-STATUS                        06180309
+061804        MOVE TRD-CURRENCY             TO ORD-CURRENCY             06180409
+061805        MOVE TRD-EXCHANGE             TO ORD-TRADING-XCHNG        06180509
+061806        MOVE TRD-ORDER-ID             TO ORD-TRADEID              06180609
+061807        MOVE TRD-FIGI                 TO ORD-FIGI                 06180709
+061808        MOVE 'B'                      TO ORD-BUY-SELL-IND         06180809
+061809        PERFORM 8000-UPDATE-ORDER                                 06180909
+061810           THRU 8000-EXIT                                         06181009
+061811*                                                                 06181109
+061812        MOVE 'S'                      TO ORD-BUY-SELL-IND         06181209
+061813        PERFORM 8000-UPDATE-ORDER                                 06181309
+061814           THRU 8000-EXIT                                         06181409
+061815     END-IF                                                       06181509
+061820     .                                                            06182006
+061900*                                                                 06190002
+062000 5001-EXIT.                                                       06200002
+062100*                                                                 06210002
+062200     EXIT.                                                        06220002
+062300                                                                  06230002
+062400 5002-VALIDATE-SECURITY.                                          06240002
+062500                                                                  06250002
+062600     INITIALIZE WS-SECURITY-IO                                    06260002
+062700     MOVE ORD-FIGI         TO WS-FIGI                             06270002
+062800     CALL WS-SECURITY-CHECK                                       06280042
+062900          USING WS-SECURITY-IO                                    06290042
+063500     END-CALL                                                     06350042
+064800*                                                                 06480002
+064900     EVALUATE TRUE                                                06490002
+065000        WHEN 88-SECURITY-ACTIVE                                   06500002
+065100             CONTINUE                                             06510002
+065200        WHEN 88-SECURITY-NOT-FOUND                                06520002
+065300            SET DATA-EXCEPTION TO TRUE                            06530002
+065400            MOVE ORD-TRADEID TO WS-TRADEID                        06540002
+065500            MOVE SPACES TO WS-EXCEPTION                           06550042
+065600            STRING                                                06560002
+065700               'TradeId = ' WS-TRADEID ' : '                      06570056
+065800               'Rejected - Reason : SECURITY '                    06580002
+065900               ORD-FIGI        ' Not found'                       06590002
+066000              DELIMITED BY SIZE                                   06600002
+066100              INTO WS-EXCEPTION                                   06610042
+066200            END-STRING                                            06620002
+066300            PERFORM 9000-REPORT-EXCEPTION                         06630002
+066310               THRU 9000-EXIT                                     06631023
+066400                                                                  06640002
+066500        WHEN 88-SECURITY-INACTIVE                                 06650002
+066600            SET DATA-EXCEPTION TO TRUE                            06660002
+066700            MOVE ORD-TRADEID TO WS-TRADEID                        06670002
+066800            MOVE SPACES TO WS-EXCEPTION                           06680042
+066900            STRING                                                06690002
+067000               'TradeId = ' WS-TRADEID ' : '                      06700056
+067100               'Rejected - Reason : SECURITY '                    06710002
+067200               ORD-FIGI        ' Not Active'                      06720002
+067300              DELIMITED BY SIZE                                   06730002
+067400              INTO WS-EXCEPTION                                   06740042
+067500            END-STRING                                            06750002
+067600            PERFORM 9000-REPORT-EXCEPTION                         06760002
+067601               THRU 9000-EXIT                                     06760123
+067610        WHEN 88-SECURITY-EXCEPTION                                06761009
+067620            SET APPL-EXCEPTION TO TRUE                            06762009
+067630            MOVE WS-SECURITY-ERROR-MSG TO WS-EXCEPTION            06763042
+067640            PERFORM 9000-REPORT-EXCEPTION                         06764009
+067650               THRU 9000-EXIT                                     06765023
+067700                                                                  06770002
+067800     END-EVALUATE                                                 06780002
+067900     IF 88-SECURITY-ACTIVE THEN                                   06790002
+068000        CONTINUE                                                  06800002
+068100     ELSE                                                         06810002
+068200* Update Buyer/Seller Order status                                06820002
+068300            SET OVERDUE-SECURITY-INVLD     TO TRUE                06830002
+068400            MOVE WS-ORDER-STATUS TO ORD-STATUS                    06840002
+068500*                                                                 06850002
+068600            MOVE TRD-CURRENCY         TO ORD-CURRENCY             06860002
+068700            MOVE TRD-EXCHANGE         TO ORD-TRADING-XCHNG        06870002
+068800            MOVE TRD-ORDER-ID         TO ORD-TRADEID              06880002
+068900            MOVE TRD-FIGI             TO ORD-FIGI                 06890002
+069000            MOVE 'B'                  TO ORD-BUY-SELL-IND         06900002
+069100            PERFORM 8000-UPDATE-ORDER                             06910002
+069200               THRU 8000-EXIT                                     06920002
+069300*                                                                 06930002
+069400            MOVE 'S'                  TO ORD-BUY-SELL-IND         06940002
+069500            PERFORM 8000-UPDATE-ORDER                             06950002
+069600               THRU 8000-EXIT                                     06960002
+069700     END-IF                                                       06970002
+069710     .                                                            06971006
+069800                                                                  06980002
+069900 5002-EXIT.                                                       06990002
+070000*                                                                 07000002
+070100     EXIT.                                                        07010002
+070200                                                                  07020002
+070300 5003-BUYER-SEC-ACCOUNT.                                          07030003
+070400*                                                                 07040002
+070500*                                                                 07050002
+070600     MOVE TRD-BUYER-ID  TO SAC-CUSTOMER-ID                        07060003
+070700     MOVE TRD-CURRENCY  TO SAC-CURRENCY                           07070003
+070800*                                                                 07080003
+070900     EXEC SQL                                                     07090003
+071000         SELECT                                                   07100003
+071100               SAC_NUMBER                                         07110003
+071200             , SAC_STATUS                                         07120003
+071300          INTO :SAC-NUMBER                                        07130003
+071400              ,:SAC-STATUS                                        07140003
+071500          FROM TBTRDSAC                                           07150003
+071600          WHERE                                                   07160003
+071700                SAC_CUSTOMER_ID   = :SAC-CUSTOMER-ID              07170003
+071800          AND   SAC_CURRENCY      = :SAC-CURRENCY                 07180003
+071810          WITH UR                                                 07181027
+071900     END-EXEC.                                                    07190003
+072000     MOVE SQLCODE TO WS-SQLCODE                                   07200003
+072100                                                                  07210003
+072200     EVALUATE SQLCODE                                             07220003
+072300         WHEN 0                                                   07230003
+072400              IF SAC-STATUS = 'A'                                 07240003
+072410                 DISPLAY SAC-CUSTOMER-ID '**'                     07241062
+072420                         SAC-CURRENCY '**'                        07242062
+072430                         SAC-NUMBER                               07243062
+072500                 MOVE SAC-NUMBER      TO TRD-BUYER-SEC-ACC-NUM    07250003
+072600              ELSE                                                07260003
+072700                 SET DATA-EXCEPTION TO TRUE                       07270003
+072800                 MOVE SAC-NUMBER  TO WS-ACC-DISP                  07280003
+072900                 MOVE SPACES TO WS-EXCEPTION                      07290042
+073000                 STRING                                           07300003
+073100                    'TradeId = ' WS-TRADEID ' : '                 07310056
+073200                    'Rejected - Reason : Buyer Security Account'  07320003
+073300                    ' Not active - SAC Numnber  = '               07330003
+073400                    WS-ACC-DISP                                   07340003
+073500                   DELIMITED BY SIZE                              07350003
+073600                   INTO WS-EXCEPTION                              07360042
+073700                 END-STRING                                       07370003
+073800                 PERFORM 9000-REPORT-EXCEPTION                    07380003
+073810                    THRU 9000-EXIT                                07381023
+073900*                                                                 07390003
+074000*                Update Buyer/Seller side order to Overdue        07400003
+074100*                                                                 07410003
+074200                 SET OVERDUE-BUYER-AC-INVLD     TO TRUE           07420003
+074300                 MOVE WS-ORDER-STATUS TO ORD-STATUS               07430003
+074400*                                                                 07440003
+074500                 MOVE TRD-CURRENCY    TO ORD-CURRENCY             07450003
+074600                 MOVE TRD-EXCHANGE    TO ORD-TRADING-XCHNG        07460003
+074700                 MOVE TRD-ORDER-ID    TO ORD-TRADEID              07470003
+074800                 MOVE TRD-FIGI        TO ORD-FIGI                 07480003
+074900                 MOVE 'B'             TO ORD-BUY-SELL-IND         07490003
+075000                 PERFORM 8000-UPDATE-ORDER                        07500003
+075100                    THRU 8000-EXIT                                07510003
+075200                 MOVE 'S'             TO ORD-BUY-SELL-IND         07520003
+075300                 PERFORM 8000-UPDATE-ORDER                        07530003
+075400                    THRU 8000-EXIT                                07540003
+075500              END-IF                                              07550003
+075600         WHEN 100                                                 07560003
+075700              SET DATA-EXCEPTION TO TRUE                          07570003
+075800              MOVE SAC-NUMBER     TO WS-ACC-DISP                  07580003
+075900              MOVE SPACES TO WS-EXCEPTION                         07590042
+076000              STRING                                              07600003
+076100                 'TradeId = ' WS-TRADEID ' : '                    07610056
+076200                 'Rejected - Reason : Buyer Security Account'     07620003
+076300                 ' Not Found  - SAC Numnber  = '                  07630003
+076400                 WS-ACC-DISP                                      07640003
+076500                DELIMITED BY SIZE                                 07650003
+076600                INTO WS-EXCEPTION                                 07660042
+076700              END-STRING                                          07670003
+076800              PERFORM 9000-REPORT-EXCEPTION                       07680003
+076810                 THRU 9000-EXIT                                   07681023
+076900*                                                                 07690003
+077000*             Update Buyer/Seller side order to Overdue           07700003
+077100*                                                                 07710003
+077200              SET OVERDUE-BUYER-AC-INVLD        TO TRUE           07720003
+077300              MOVE WS-ORDER-STATUS TO ORD-STATUS                  07730003
+077400*                                                                 07740003
+077500              MOVE TRD-CURRENCY       TO ORD-CURRENCY             07750003
+077600              MOVE TRD-EXCHANGE       TO ORD-TRADING-XCHNG        07760003
+077700              MOVE TRD-ORDER-ID       TO ORD-TRADEID              07770003
+077800              MOVE TRD-FIGI           TO ORD-FIGI                 07780003
+077900              MOVE 'B'                TO ORD-BUY-SELL-IND         07790003
+078000              PERFORM 8000-UPDATE-ORDER                           07800003
+078100                 THRU 8000-EXIT                                   07810003
+078200              MOVE 'S'                TO ORD-BUY-SELL-IND         07820003
+078300              PERFORM 8000-UPDATE-ORDER                           07830003
+078400                 THRU 8000-EXIT                                   07840003
+078500         WHEN OTHER                                               07850003
+078600              SET APPL-EXCEPTION TO TRUE                          07860003
+078700              MOVE SAC-NUMBER     TO WS-ACC-DISP                  07870003
+078800              MOVE SPACES TO WS-EXCEPTION                         07880042
+078900              STRING                                              07890003
+079000                 'Buyer Security Account'                         07900003
+079100                 ' Select Failed - SQLCODE  = '                   07910003
+079200                 WS-SQLCODE                                       07920003
+079300                DELIMITED BY SIZE                                 07930003
+079400                INTO WS-EXCEPTION                                 07940042
+079500              END-STRING                                          07950003
+079600              PERFORM 9000-REPORT-EXCEPTION                       07960003
+079610                 THRU 9000-EXIT                                   07961023
+079700     END-EVALUATE                                                 07970003
+079710     .                                                            07971006
+079800*                                                                 07980003
+079900 5003-EXIT.                                                       07990003
+080000*                                                                 08000003
+080100     EXIT.                                                        08010003
+080200*                                                                 08020003
+080300 5004-SELLER-SEC-ACCOUNT.                                         08030003
+080400*                                                                 08040003
+080500*                                                                 08050003
+080600     MOVE TRD-SELLER-ID TO SAC-CUSTOMER-ID                        08060003
+080700     MOVE TRD-CURRENCY  TO SAC-CURRENCY                           08070003
+080800*                                                                 08080003
+080900     EXEC SQL                                                     08090003
+081000         SELECT                                                   08100003
+081100               SAC_NUMBER                                         08110003
+081200             , SAC_STATUS                                         08120003
+081300          INTO :SAC-NUMBER                                        08130003
+081400              ,:SAC-STATUS                                        08140003
+081500          FROM TBTRDSAC                                           08150003
+081600          WHERE                                                   08160003
+081700                SAC_CUSTOMER_ID   = :SAC-CUSTOMER-ID              08170003
+081800          AND   SAC_CURRENCY      = :SAC-CURRENCY                 08180003
+081810          WITH UR                                                 08181027
+081900     END-EXEC.                                                    08190003
+082000     MOVE SQLCODE TO WS-SQLCODE                                   08200003
+082100                                                                  08210003
+082200     EVALUATE SQLCODE                                             08220003
+082300         WHEN 0                                                   08230003
+082400              IF SAC-STATUS = 'A'                                 08240003
+082500                 MOVE SAC-NUMBER      TO TRD-SELLER-SEC-ACC-NUM   08250003
+082600              ELSE                                                08260003
+082700                 SET DATA-EXCEPTION TO TRUE                       08270003
+082800                 MOVE SAC-NUMBER  TO WS-ACC-DISP                  08280003
+082900                 MOVE SPACES TO WS-EXCEPTION                      08290042
+083000                 STRING                                           08300003
+083100                    'TradeId = ' WS-TRADEID ' : '                 08310056
+083200                    'Rejected - Reason : Seller Security Account' 08320003
+083300                    ' Not active - SAC Numnber  = '               08330003
+083400                    WS-ACC-DISP                                   08340003
+083500                   DELIMITED BY SIZE                              08350003
+083600                   INTO WS-EXCEPTION                              08360042
+083700                 END-STRING                                       08370003
+083800                 PERFORM 9000-REPORT-EXCEPTION                    08380003
+083810                    THRU 9000-EXIT                                08381023
+083900*                                                                 08390003
+084000*                Update Buyer/Seller side order to Overdue        08400003
+084100*                                                                 08410003
+084200                 SET OVERDUE-SELLER-AC-INVLD    TO TRUE           08420003
+084300                 MOVE WS-ORDER-STATUS TO ORD-STATUS               08430003
+084400*                                                                 08440003
+084500                 MOVE TRD-CURRENCY    TO ORD-CURRENCY             08450003
+084600                 MOVE TRD-EXCHANGE    TO ORD-TRADING-XCHNG        08460003
+084700                 MOVE TRD-ORDER-ID    TO ORD-TRADEID              08470003
+084800                 MOVE TRD-FIGI        TO ORD-FIGI                 08480003
+084900                 MOVE 'B'             TO ORD-BUY-SELL-IND         08490003
+085000                 PERFORM 8000-UPDATE-ORDER                        08500003
+085100                    THRU 8000-EXIT                                08510003
+085200                 MOVE 'S'             TO ORD-BUY-SELL-IND         08520003
+085300                 PERFORM 8000-UPDATE-ORDER                        08530003
+085400                    THRU 8000-EXIT                                08540003
+085500              END-IF                                              08550003
+085600         WHEN 100                                                 08560003
+085700              SET DATA-EXCEPTION TO TRUE                          08570003
+085800              MOVE SAC-NUMBER     TO WS-ACC-DISP                  08580003
+085900              MOVE SPACES TO WS-EXCEPTION                         08590042
+086000              STRING                                              08600003
+086100                 'TradeId = ' WS-TRADEID ' : '                    08610056
+086200                 'Rejected - Reason : Seller Security Account'    08620003
+086300                 ' Not Found  - SAC Numnber  = '                  08630003
+086400                 WS-ACC-DISP                                      08640003
+086500                DELIMITED BY SIZE                                 08650003
+086600                INTO WS-EXCEPTION                                 08660042
+086700              END-STRING                                          08670003
+086800              PERFORM 9000-REPORT-EXCEPTION                       08680003
+086810                 THRU 9000-EXIT                                   08681023
+086900*                                                                 08690003
+087000*             Update Buyer/Seller side order to Overdue           08700003
+087100*                                                                 08710003
+087200              SET OVERDUE-SELLER-AC-INVLD       TO TRUE           08720003
+087300              MOVE WS-ORDER-STATUS TO ORD-STATUS                  08730003
+087400*                                                                 08740003
+087500              MOVE TRD-CURRENCY       TO ORD-CURRENCY             08750003
+087600              MOVE TRD-EXCHANGE       TO ORD-TRADING-XCHNG        08760003
+087700              MOVE TRD-ORDER-ID       TO ORD-TRADEID              08770003
+087800              MOVE TRD-FIGI           TO ORD-FIGI                 08780003
+087900              MOVE 'B'                TO ORD-BUY-SELL-IND         08790003
+088000              PERFORM 8000-UPDATE-ORDER                           08800003
+088100                 THRU 8000-EXIT                                   08810003
+088200              MOVE 'S'                TO ORD-BUY-SELL-IND         08820003
+088300              PERFORM 8000-UPDATE-ORDER                           08830003
+088400                 THRU 8000-EXIT                                   08840003
+088500         WHEN OTHER                                               08850003
+088600              SET APPL-EXCEPTION TO TRUE                          08860003
+088700              MOVE SAC-NUMBER     TO WS-ACC-DISP                  08870003
+088800              MOVE SPACES TO WS-EXCEPTION                         08880042
+088900              STRING                                              08890003
+089000                 'Seller Security Account'                        08900003
+089100                 ' Select Failed - SQLCODE  = '                   08910003
+089200                 WS-SQLCODE                                       08920003
+089300                DELIMITED BY SIZE                                 08930003
+089400                INTO WS-EXCEPTION                                 08940042
+089500              END-STRING                                          08950003
+089600              PERFORM 9000-REPORT-EXCEPTION                       08960003
+089610                 THRU 9000-EXIT                                   08961023
+089700     END-EVALUATE                                                 08970003
+089710     .                                                            08971006
+089800*                                                                 08980003
+089900 5004-EXIT.                                                       08990003
+090000*                                                                 09000003
+090100     EXIT.                                                        09010003
+090200*                                                                 09020003
+090300 5005-BUYER-MONEY-ACCOUNT.                                        09030003
+090400*                                                                 09040003
+090500*                                                                 09050003
+090600     MOVE TRD-CURRENCY  TO MAC-CURRENCY                           09060003
+090700     MOVE TRD-BUYER-ID  TO MAC-CUSTOMER-ID                        09070003
+090800*                                                                 09080003
+090900     EXEC SQL                                                     09090003
+091000         SELECT                                                   09100003
+091100               MAC_NUMBER                                         09110003
+091200             , MAC_STATUS                                         09120003
+091300          INTO :MAC-NUMBER                                        09130003
+091400              ,:MAC-STATUS                                        09140003
+091500          FROM TBTRDMAC                                           09150003
+091600          WHERE                                                   09160003
+091700                MAC_CURRENCY      = :MAC-CURRENCY                 09170004
+091800            AND MAC_CUSTOMER_ID   = :MAC-CUSTOMER-ID              09180004
+091810          WITH UR                                                 09181027
+091900     END-EXEC.                                                    09190003
+092000     MOVE SQLCODE TO WS-SQLCODE                                   09200003
+092100                                                                  09210003
+092200     EVALUATE SQLCODE                                             09220003
+092300         WHEN 0                                                   09230003
+092400              IF MAC-STATUS = 'A'                                 09240003
+092500                 MOVE MAC-NUMBER      TO TRD-BUYER-MONEY-ACC-NUM  09250003
+092600              ELSE                                                09260003
+092700                 SET DATA-EXCEPTION TO TRUE                       09270003
+092800                 MOVE MAC-NUMBER  TO WS-ACC-DISP                  09280003
+092900                 MOVE SPACES TO WS-EXCEPTION                      09290042
+093000                 STRING                                           09300003
+093100                    'TradeId = ' WS-TRADEID ' : '                 09310056
+093200                    'Rejected - Reason : Buyer Money Account'     09320003
+093300                    ' Not active - MAC Numnber  = '               09330003
+093400                    WS-ACC-DISP                                   09340003
+093500                   DELIMITED BY SIZE                              09350003
+093600                   INTO WS-EXCEPTION                              09360042
+093700                 END-STRING                                       09370003
+093800                 PERFORM 9000-REPORT-EXCEPTION                    09380003
+093810                    THRU 9000-EXIT                                09381023
+093900*                                                                 09390003
+094000*                Update Buyer/Seller side order to Overdue        09400003
+094100*                                                                 09410003
+094200                 SET OVERDUE-BUYER-AC-INVLD     TO TRUE           09420003
+094300                 MOVE WS-ORDER-STATUS TO ORD-STATUS               09430003
+094400*                                                                 09440003
+094500                 MOVE TRD-CURRENCY    TO ORD-CURRENCY             09450003
+094600                 MOVE TRD-EXCHANGE    TO ORD-TRADING-XCHNG        09460003
+094700                 MOVE TRD-ORDER-ID    TO ORD-TRADEID              09470003
+094800                 MOVE TRD-FIGI        TO ORD-FIGI                 09480003
+094900                 MOVE 'B'             TO ORD-BUY-SELL-IND         09490003
+095000                 PERFORM 8000-UPDATE-ORDER                        09500003
+095100                    THRU 8000-EXIT                                09510003
+095200                 MOVE 'S'             TO ORD-BUY-SELL-IND         09520003
+095300                 PERFORM 8000-UPDATE-ORDER                        09530003
+095400                    THRU 8000-EXIT                                09540003
+095500              END-IF                                              09550003
+095600         WHEN 100                                                 09560003
+095700              SET DATA-EXCEPTION TO TRUE                          09570003
+095800              MOVE MAC-NUMBER     TO WS-ACC-DISP                  09580003
+095900              MOVE SPACES TO WS-EXCEPTION                         09590042
+096000              STRING                                              09600003
+096100                 'TradeId = ' WS-TRADEID ' : '                    09610056
+096200                 'Rejected - Reason : Buyer Money Account'        09620003
+096300                 ' Not Found  - MAC Numnber  = '                  09630003
+096400                 WS-ACC-DISP                                      09640003
+096500                DELIMITED BY SIZE                                 09650003
+096600                INTO WS-EXCEPTION                                 09660042
+096700              END-STRING                                          09670003
+096800              PERFORM 9000-REPORT-EXCEPTION                       09680003
+096810                 THRU 9000-EXIT                                   09681023
+096900*                                                                 09690003
+097000*             Update Buyer/Seller side order to Overdue           09700003
+097100*                                                                 09710003
+097200              SET OVERDUE-BUYER-AC-INVLD        TO TRUE           09720003
+097300              MOVE WS-ORDER-STATUS TO ORD-STATUS                  09730003
+097400*                                                                 09740003
+097500              MOVE TRD-CURRENCY       TO ORD-CURRENCY             09750003
+097600              MOVE TRD-EXCHANGE       TO ORD-TRADING-XCHNG        09760003
+097700              MOVE TRD-ORDER-ID       TO ORD-TRADEID              09770003
+097800              MOVE TRD-FIGI           TO ORD-FIGI                 09780003
+097900              MOVE 'B'                TO ORD-BUY-SELL-IND         09790003
+098000              PERFORM 8000-UPDATE-ORDER                           09800003
+098100                 THRU 8000-EXIT                                   09810003
+098200              MOVE 'S'                TO ORD-BUY-SELL-IND         09820003
+098300              PERFORM 8000-UPDATE-ORDER                           09830003
+098400                 THRU 8000-EXIT                                   09840003
+098500         WHEN OTHER                                               09850003
+098600              SET APPL-EXCEPTION TO TRUE                          09860003
+098700              MOVE MAC-NUMBER     TO WS-ACC-DISP                  09870003
+098800              MOVE SPACES TO WS-EXCEPTION                         09880042
+098900              STRING                                              09890003
+099000                 'Buyer Money Account'                            09900003
+099100                 ' Select Failed - SQLCODE  = '                   09910003
+099200                 WS-SQLCODE                                       09920003
+099300                DELIMITED BY SIZE                                 09930003
+099400                INTO WS-EXCEPTION                                 09940042
+099500              END-STRING                                          09950003
+099600              PERFORM 9000-REPORT-EXCEPTION                       09960003
+099610                 THRU 9000-EXIT                                   09961023
+099700     END-EVALUATE                                                 09970003
+099710     .                                                            09971006
+099800*                                                                 09980003
+099900 5005-EXIT.                                                       09990003
+100000*                                                                 10000003
+100100     EXIT.                                                        10010003
+100200 5006-SELLER-MONEY-ACCOUNT.                                       10020003
+100300*                                                                 10030003
+100400*                                                                 10040003
+100500     MOVE TRD-CURRENCY  TO MAC-CURRENCY                           10050003
+100600     MOVE TRD-SELLER-ID TO MAC-CUSTOMER-ID                        10060003
+100700*                                                                 10070003
+100800     EXEC SQL                                                     10080003
+100900         SELECT                                                   10090003
+101000               MAC_NUMBER                                         10100003
+101100             , MAC_STATUS                                         10110003
+101200          INTO :MAC-NUMBER                                        10120003
+101300              ,:MAC-STATUS                                        10130003
+101400          FROM TBTRDMAC                                           10140003
+101500          WHERE                                                   10150003
+101600                MAC_CURRENCY      = :MAC-CURRENCY                 10160004
+101700            AND MAC_CUSTOMER_ID   = :MAC-CUSTOMER-ID              10170004
+101710          WITH UR                                                 10171027
+101800     END-EXEC.                                                    10180003
+101900     MOVE SQLCODE TO WS-SQLCODE                                   10190003
+102000                                                                  10200003
+102100     EVALUATE SQLCODE                                             10210003
+102200         WHEN 0                                                   10220003
+102300              IF MAC-STATUS = 'A'                                 10230003
+102400                 MOVE MAC-NUMBER      TO TRD-SELLER-MONEY-ACC-NUM 10240003
+102500              ELSE                                                10250003
+102600                 SET DATA-EXCEPTION TO TRUE                       10260003
+102700                 MOVE MAC-NUMBER  TO WS-ACC-DISP                  10270003
+102800                 MOVE SPACES TO WS-EXCEPTION                      10280042
+102900                 STRING                                           10290003
+103000                    'TradeId = ' WS-TRADEID ' : '                 10300056
+103100                    'Rejected - Reason : Seller Money Account'    10310003
+103200                    ' Not active - MAC Numnber  = '               10320003
+103300                    WS-ACC-DISP                                   10330003
+103400                   DELIMITED BY SIZE                              10340003
+103500                   INTO WS-EXCEPTION                              10350042
+103600                 END-STRING                                       10360003
+103700                 PERFORM 9000-REPORT-EXCEPTION                    10370003
+103710                    THRU 9000-EXIT                                10371023
+103800*                                                                 10380003
+103900*                Update Buyer/Seller side order to Overdue        10390003
+104000*                                                                 10400003
+104100                 SET OVERDUE-SELLER-AC-INVLD    TO TRUE           10410003
+104200                 MOVE WS-ORDER-STATUS TO ORD-STATUS               10420003
+104300*                                                                 10430003
+104400                 MOVE TRD-CURRENCY    TO ORD-CURRENCY             10440003
+104500                 MOVE TRD-EXCHANGE    TO ORD-TRADING-XCHNG        10450003
+104600                 MOVE TRD-ORDER-ID    TO ORD-TRADEID              10460003
+104700                 MOVE TRD-FIGI        TO ORD-FIGI                 10470003
+104800                 MOVE 'B'             TO ORD-BUY-SELL-IND         10480003
+104900                 PERFORM 8000-UPDATE-ORDER                        10490003
+105000                    THRU 8000-EXIT                                10500003
+105100                 MOVE 'S'             TO ORD-BUY-SELL-IND         10510003
+105200                 PERFORM 8000-UPDATE-ORDER                        10520003
+105300                    THRU 8000-EXIT                                10530003
+105400              END-IF                                              10540003
+105500         WHEN 100                                                 10550003
+105600              SET DATA-EXCEPTION TO TRUE                          10560003
+105700              MOVE MAC-NUMBER     TO WS-ACC-DISP                  10570003
+105800              MOVE SPACES TO WS-EXCEPTION                         10580042
+105900              STRING                                              10590003
+106000                 'TradeId = ' WS-TRADEID ' : '                    10600056
+106100                 'Rejected - Reason : Seller Money Account'       10610003
+106200                 ' Not Found  - MAC Numnber  = '                  10620003
+106300                 WS-ACC-DISP                                      10630003
+106400                DELIMITED BY SIZE                                 10640003
+106500                INTO WS-EXCEPTION                                 10650042
+106600              END-STRING                                          10660003
+106700              PERFORM 9000-REPORT-EXCEPTION                       10670003
+106710                 THRU 9000-EXIT                                   10671023
+106800*                                                                 10680003
+106900*             Update Buyer/Seller side order to Overdue           10690003
+107000*                                                                 10700003
+107100              SET OVERDUE-SELLER-AC-INVLD       TO TRUE           10710003
+107200              MOVE WS-ORDER-STATUS TO ORD-STATUS                  10720003
+107300*                                                                 10730003
+107400              MOVE TRD-CURRENCY       TO ORD-CURRENCY             10740003
+107500              MOVE TRD-EXCHANGE       TO ORD-TRADING-XCHNG        10750003
+107600              MOVE TRD-ORDER-ID       TO ORD-TRADEID              10760003
+107700              MOVE TRD-FIGI           TO ORD-FIGI                 10770003
+107800              MOVE 'B'                TO ORD-BUY-SELL-IND         10780003
+107900              PERFORM 8000-UPDATE-ORDER                           10790003
+108000                 THRU 8000-EXIT                                   10800003
+108100              MOVE 'S'                TO ORD-BUY-SELL-IND         10810003
+108200              PERFORM 8000-UPDATE-ORDER                           10820003
+108300                 THRU 8000-EXIT                                   10830003
+108400         WHEN OTHER                                               10840003
+108500              SET APPL-EXCEPTION TO TRUE                          10850003
+108600              MOVE MAC-NUMBER     TO WS-ACC-DISP                  10860003
+108700              MOVE SPACES TO WS-EXCEPTION                         10870042
+108800              STRING                                              10880003
+108900                 'Seller Money Account'                           10890003
+109000                 ' Select Failed - SQLCODE  = '                   10900003
+109100                 WS-SQLCODE                                       10910003
+109200                DELIMITED BY SIZE                                 10920003
+109300                INTO WS-EXCEPTION                                 10930042
+109400              END-STRING                                          10940003
+109500              PERFORM 9000-REPORT-EXCEPTION                       10950003
+109510                 THRU 9000-EXIT                                   10951023
+109600     END-EVALUATE                                                 10960003
+109610     .                                                            10961006
+109700*                                                                 10970003
+109800 5006-EXIT.                                                       10980003
+109900*                                                                 10990003
+110000     EXIT.                                                        11000003
+110100*                                                                 11010003
+110200 5007-UPDATE-ORDER-MATCHED.                                       11020003
+110201*                                                                 11020103
+110210     SET MATCHED          TO TRUE                                 11021003
+110220     MOVE WS-ORDER-STATUS TO ORD-STATUS                           11022003
+110230                                                                  11023003
+110240     MOVE TRD-CURRENCY       TO ORD-CURRENCY                      11024003
+110250     MOVE TRD-EXCHANGE       TO ORD-TRADING-XCHNG                 11025003
+110260     MOVE TRD-ORDER-ID       TO ORD-TRADEID                       11026003
+110270     MOVE TRD-FIGI           TO ORD-FIGI                          11027003
+110280     MOVE 'B'                TO ORD-BUY-SELL-IND                  11028003
+110290     PERFORM 8000-UPDATE-ORDER                                    11029003
+110291        THRU 8000-EXIT                                            11029103
+110292     MOVE 'S'                TO ORD-BUY-SELL-IND                  11029203
+110293     PERFORM 8000-UPDATE-ORDER                                    11029303
+110294        THRU 8000-EXIT                                            11029403
+110295     .                                                            11029503
+110297*                                                                 11029703
+110300 5007-EXIT.                                                       11030003
+110400*                                                                 11040003
+110500     EXIT.                                                        11050003
+110510*                                                                 11051043
+110520 5008-WRITE-TO-STLMT-QUEUE.                                       11052043
+110530*                                                                 11053043
+110531     ADD 1 TO WS-STQ-INDEX                                        11053143
+110532     MOVE TRD-ORDER-PAIR   TO WS-STQ-TRDPAIR(WS-STQ-INDEX)        11053243
+110533     DISPLAY '('TRD-ORDER-PAIR')'                                 11053362
+110534*                                                                 11053443
+110535     IF WS-STQ-INDEX = 100 THEN                                   11053543
+110536        PERFORM 5009-INSERT-TO-STQ                                11053643
+110537           THRU 5009-EXIT                                         11053743
+110538        MOVE 0 TO WS-STQ-INDEX                                    11053843
+110539     END-IF                                                       11053943
+110580*                                                                 11058043
+110616     .                                                            11061643
+110617*                                                                 11061743
+110618 5008-EXIT.                                                       11061843
+110619*                                                                 11061943
+110620     EXIT.                                                        11062043
+110621*                                                                 11062143
+110622 5009-INSERT-TO-STQ.                                              11062243
+110623*                                                                 11062343
+110624     EXEC SQL                                                     11062451
+110625       INSERT INTO TBTRDSTQ                                       11062551
+110626       (                                                          11062651
+110627         STQ_CURRENCY                                             11062751
+110628        ,STQ_TRADE_DATA                                           11062851
+110629       )                                                          11062951
+110630       VALUES                                                     11063051
+110631       (                                                          11063151
+110632         :WS-STQ-CURRENCY                                         11063251
+110633        ,:WS-STQ-TRDPAIR                                          11063351
+110634       )                                                          11063451
+110635       FOR :WS-STQ-INDEX ROWS                                     11063551
+110636       NOT ATOMIC                                                 11063651
+110637       CONTINUE ON SQLEXCEPTION                                   11063751
+110638     END-EXEC                                                     11063851
+110639*                                                                 11063951
+110640     EVALUATE SQLCODE                                             11064043
+110641         WHEN 0                                                   11064143
+110642              CONTINUE                                            11064243
+110643         WHEN OTHER                                               11064343
+110644              MOVE SQLCODE TO WS-SQLCODE                          11064443
+110645              SET APPL-EXCEPTION TO TRUE                          11064544
+110646              MOVE SPACES TO WS-EXCEPTION                         11064643
+110647              STRING                                              11064743
+110648                 'Settlement Queue Insert Failed with SQLCODE = ' 11064843
+110649                 WS-SQLCODE                                       11064943
+110650                DELIMITED BY SIZE                                 11065043
+110651                INTO WS-EXCEPTION                                 11065143
+110652              END-STRING                                          11065243
+110653              PERFORM 9000-REPORT-EXCEPTION                       11065343
+110654                 THRU 9000-EXIT                                   11065443
+110665     END-EVALUATE                                                 11066543
+110666*                                                                 11066602
+110667     CONTINUE.                                                    11066743
+110670*                                                                 11067043
+110680 5009-EXIT.                                                       11068051
+110690*                                                                 11069043
+110691     EXIT.                                                        11069143
+110692*                                                                 11069243
+110700 8000-UPDATE-ORDER.                                               11070002
+110800*                                                                 11080002
+110910                                                                  11091026
+110920     SET DO-SQL TO TRUE                                           11092026
+110930     PERFORM UNTIL SQL-DONE                                       11093026
+110940        MOVE 0 TO SQLCODE                                         11094026
+111000        EXEC SQL                                                  11100026
+111100            UPDATE TBTRDORD                                       11110026
+111200               SET ORD_STATUS = :ORD-STATUS                       11120026
+111300            WHERE                                                 11130026
+111400                  ORD_CURRENCY      = :ORD-CURRENCY               11140026
+111500            AND   ORD_TRADING_XCHNG = :ORD-TRADING-XCHNG          11150026
+111600            AND   ORD_TRADEID       = :ORD-TRADEID                11160026
+111700            AND   ORD_FIGI          = :ORD-FIGI                   11170026
+111800            AND   ORD_BUY_SELL_IND  = :ORD-BUY-SELL-IND           11180026
+111900        END-EXEC                                                  11190027
+111910        IF SQLCODE = -911 OR -913 THEN                            11191026
+111920           SET RETRY-SQL TO TRUE                                  11192026
+111930        ELSE                                                      11193026
+111940           SET SQL-DONE  TO TRUE                                  11194026
+111941        END-IF                                                    11194126
+111950     END-PERFORM                                                  11195026
+112000     IF SQLCODE NOT = 0 THEN                                      11200002
+112100        MOVE SQLCODE TO WS-SQLCODE                                11210002
+112200        SET APPL-EXCEPTION TO TRUE                                11220002
+112300        MOVE SPACES TO WS-EXCEPTION                               11230042
+112400        STRING                                                    11240002
+112500           'Update of Order failed : SQLCODE = '                  11250002
+112600           WS-SQLCODE                                             11260002
+112700           DELIMITED BY SIZE                                      11270002
+112800          INTO WS-EXCEPTION                                       11280042
+112900        END-STRING                                                11290002
+113000        PERFORM 9000-REPORT-EXCEPTION                             11300002
+113010           THRU 9000-EXIT                                         11301023
+113100     END-IF                                                       11310002
+113101     MOVE ORD-STATUS TO WS-ORDER-STATUS                           11310131
+113110     IF OVERDUE                                                   11311031
+113111        INITIALIZE WS-CUSTOMER-SUMMARY-REC                        11311131
+113112        SET 88-SUMMARY-NO-BOOKING TO TRUE                         11311231
+113113        IF ORD-BUY-SELL-IND = 'B' THEN                            11311331
+113114           MOVE TRD-BUYER-ID TO  WS-SUMMARY-CUSTOMER-ID           11311431
+113115        ELSE                                                      11311531
+113116           MOVE TRD-SELLER-ID TO WS-SUMMARY-CUSTOMER-ID           11311631
+113117        END-IF                                                    11311731
+113118        MOVE LK-CURRENCY      TO WS-SUMMARY-CURRENCY              11311851
+113119        PERFORM 8001-LOG-SUMMARY                                  11311932
+113120           THRU 8001-EXIT                                         11312032
+113130     END-IF                                                       11313031
+113200     .                                                            11320002
+113300*                                                                 11330002
+113400 8000-EXIT.                                                       11340002
+113500*                                                                 11350002
+113600     EXIT.                                                        11360002
+113700******************************************************            11370002
+115600     EXEC SQL                                                     11560001
+115700         INCLUDE EXCPCOPY                                         11570001
+115800     END-EXEC.                                                    11580001
+115810*                                                                 11581030
+115900     EXEC SQL                                                     11590030
+116000        INCLUDE SUMMARY                                           11600030
+116100     END-EXEC.                                                    11610030
+116200*                                                                 11620030

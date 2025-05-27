@@ -1,0 +1,461 @@
+000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. TRDPB006.                                            00020001
+000300***************************************************************** 00030001
+000400*                                                               * 00040001
+000500* TRDPB006 : Generate Trading Order Report                      * 00050001
+000600*                                                               * 00060001
+002100*                                                               * 00210001
+002200***************************************************************** 00220001
+002210*                                                               * 00221001
+002300 ENVIRONMENT DIVISION.                                            00230001
+002301*                                                               * 00230101
+002310 INPUT-OUTPUT SECTION.                                            00231001
+002311*                                                               * 00231101
+002320 FILE-CONTROL.                                                    00232001
+002370     SELECT REPORDER   ASSIGN TO REPORDER                         00237001
+002380                       ACCESS MODE IS SEQUENTIAL                  00238001
+002390                       FILE STATUS IS REPORDER-FILE-STATUS.       00239001
+002400 DATA DIVISION.                                                   00240001
+002410*                                                               * 00241001
+002411 FILE SECTION.                                                    00241101
+002412                                                                  00241201
+002413 FD  REPORDER                                                     00241301
+002414     RECORD CONTAINS 160                                          00241401
+002415     RECORDING MODE F.                                            00241501
+002416 01  REPORDER-RECORD                 PIC X(160).                  00241601
+002431                                                                  00243101
+002440*                                                               * 00244001
+002500 WORKING-STORAGE SECTION.                                         00250001
+002600*                                                                 00260001
+002601 77 REPORDER-FILE-STATUS             PIC X(2).                    00260101
+002602 77 WS-PAGENUM                       PIC 9(3) VALUE 0.            00260202
+002606*                                                                 00260613
+002607 01 WS-SWITCHES.                                                  00260713
+002608    05 WS-PRINT-HEADER               PIC X VALUE ' '.             00260813
+002609       88 88-PRINT-PAGE-HEADER       VALUE 'P'.                   00260913
+002610       88 88-PRINT-HEADER1           VALUE 'H'.                   00261013
+002611       88 88-PRINT-DETAIL-HDR        VALUE 'D'.                   00261113
+002612       88 88-PRINT-DETAIL            VALUE ' '.                   00261213
+002613    05 WS-END-OF-ORDERS-SW           PIC X VALUE ' '.             00261313
+002614       88 88-END-OF-ORDERS           VALUE 'Y'.                   00261413
+002615*                                                                 00261513
+002620*                                                                 00262001
+002700 01 WS-PAGE-HEADER.                                               00270001
+002701    05 FILLER                        PIC X(55) VALUE SPACES.      00270101
+002702    05 WS-PH-HEADER-FLG              PIC X(32).                   00270201
+002703       88 88-PH-BUY-ORDERS           VALUE                        00270301
+002704          ' Buy Orders Report for Client : '.                     00270403
+002705       88 88-PH-SELL-ORDERS          VALUE                        00270502
+002706          'Sell Orders Report for Client : '.                     00270602
+002707    05 WS-PH-Customer                PIC X(12).                   00270701
+002708    05 FILLER                        PIC X(3) VALUE ' : '.        00270817
+002709    05 WS-PH-Customer-desc           PIC X(30).                   00270916
+002711    05 FILLER                        PIC X(17) VALUE SPACES.      00271116
+002712    05 FILLER                        PIC X(7) VALUE 'Page : '.    00271202
+002713    05 WS-PH-PAGENUM                 PIC Z(3).                    00271302
+002714*                                                                 00271401
+002715 01 WS-HEADER1.                                                   00271501
+002716    05 FILLER                        PIC X(15)                    00271601
+002717       VALUE 'Order Status : '.                                   00271701
+002718    05 WS-H1-ORDER-STATUS-CODE       PIC 9(3).                    00271801
+002719    05 FILLER                        PIC X(3) VALUE ' - '.        00271901
+002720    05 WS-H1-ORDER-STATUS-DESC       PIC X(20).                   00272002
+002721    05 FILLER                        PIC X(119) VALUE SPACES.     00272101
+002723*                                                                 00272301
+002724 01 WS-EMPTY-HDR                     PIC X(160) VALUE SPACES.     00272401
+002733 01 WS-DETAIL-HDR1.                                               00273302
+002734    05 FILLER                        PIC X(01) VALUE '|'.         00273405
+002735    05 FILLER                        PIC X(10)                    00273501
+002736       VALUE 'Trade ID'.                                          00273602
+002737    05 FILLER                        PIC X(01) VALUE '|'.         00273705
+002738    05 WS-DH1-BUYER-SELLER           PIC X(12).                   00273801
+002739       88 88-DH1-BUYER   VALUE 'Buyer'.                           00273901
+002740       88 88-DH1-SELLER  VALUE 'Seller'.                          00274002
+002741    05 FILLER                        PIC X(01) VALUE '|'.         00274105
+002742    05 FILLER                        PIC X(12)                    00274201
+002743       Value 'Exchange'.                                          00274305
+002744    05 FILLER                        PIC X(01) VALUE '|'.         00274405
+002745    05 FILLER                        PIC X(12)                    00274502
+002746       VALUE 'FIGI ID'.                                           00274601
+002747    05 FILLER                        PIC X(01) VALUE '|'.         00274705
+002748    05 FILLER                        PIC X(20)                    00274801
+002749       VALUE 'Security Symbol'.                                   00274901
+002750    05 FILLER                        PIC X(01) VALUE '|'.         00275005
+002751    05 FILLER                        PIC X(40)                    00275101
+002752       VALUE 'Security Description'.                              00275201
+002753    05 FILLER                        PIC X(01) VALUE '|'.         00275305
+002754    05 FILLER                        PIC X(15)                    00275401
+002755       VALUE 'Security Type'.                                     00275501
+002756    05 FILLER                        PIC X(01) VALUE '|'.         00275605
+002757    05 FILLER                        PIC X(12)                    00275704
+002758       VALUE '    Quantity'.                                      00275804
+002759    05 FILLER                        PIC X(01) VALUE '|'.         00275905
+002760    05 FILLER                        PIC X(03)                    00276001
+002761       VALUE 'Cur'.                                               00276101
+002762    05 FILLER                        PIC X(01) VALUE '|'.         00276205
+002763    05 FILLER                        PIC X(12)                    00276304
+002765       VALUE '      Amount'.                                      00276504
+002766    05 FILLER                        PIC X(01) VALUE '|'.         00276605
+002767*                                                                 00276701
+002768 01 WS-DETAIL-HDR2.                                               00276802
+002769    05 FILLER                        PIC X(01) VALUE '+'.         00276901
+002770    05 FILLER                        PIC X(10)                    00277001
+002771       VALUE '----------'.                                        00277104
+002772    05 FILLER                        PIC X(01) VALUE '+'.         00277201
+002773    05 FILLER                        PIC X(12)                    00277301
+002774       VALUE '------------'.                                      00277404
+002775    05 FILLER                        PIC X(01) VALUE '+'.         00277501
+002776    05 FILLER                        PIC X(12)                    00277601
+002777       Value '------------'.                                      00277704
+002778    05 FILLER                        PIC X(01) VALUE '+'.         00277801
+002779    05 FILLER                        PIC X(12)                    00277902
+002780       Value '------------'.                                      00278004
+002781    05 FILLER                        PIC X(01) VALUE '+'.         00278101
+002782    05 FILLER                        PIC X(20)                    00278201
+002783       Value '--------------------'.                              00278304
+002784    05 FILLER                        PIC X(01) VALUE '+'.         00278401
+002785    05 FILLER                        PIC X(40)                    00278501
+002786       Value '----------------------------------------'.          00278605
+002788    05 FILLER                        PIC X(01) VALUE '+'.         00278801
+002789    05 FILLER                        PIC X(15)                    00278901
+002790       Value '---------------'.                                   00279004
+002792    05 FILLER                        PIC X(01) VALUE '+'.         00279201
+002793    05 FILLER                        PIC X(12)                    00279302
+002794       VALUE '------------'.                                      00279404
+002795    05 FILLER                        PIC X(01) VALUE '+'.         00279501
+002797    05 FILLER                        PIC X(03)                    00279701
+002798       VALUE '---'.                                               00279801
+002799    05 FILLER                        PIC X(01) VALUE '+'.         00279901
+002800    05 FILLER                        PIC X(12)                    00280002
+002801       VALUE '------------'.                                      00280104
+002802    05 FILLER                        PIC X(01) VALUE '+'.         00280205
+002803*                                                                 00280305
+002836*                                                                 00283605
+002837 01 WS-DETAIL-REC.                                                00283705
+002838    05 FILLER                        PIC X(01) VALUE '|'.         00283805
+002839    05 WS-DET-TRADEID                PIC X(10).                   00283905
+002840    05 FILLER                        PIC X(01) VALUE '|'.         00284005
+002841    05 WS-DET-BUYER-SELLER           PIC X(12).                   00284105
+002842    05 FILLER                        PIC X(01) VALUE '|'.         00284205
+002843    05 WS-DET-TRADING-XCHNG          PIC X(12).                   00284305
+002844    05 FILLER                        PIC X(01) VALUE '|'.         00284405
+002845    05 WS-DET-FIGI                   PIC X(12).                   00284505
+002846    05 FILLER                        PIC X(01) VALUE '|'.         00284605
+002847    05 WS-DET-SYMBOL                 PIC X(20).                   00284705
+002848    05 FILLER                        PIC X(01) VALUE '|'.         00284805
+002849    05 WS-DET-DESCRIPTION            PIC X(40).                   00284905
+002850    05 FILLER                        PIC X(01) VALUE '|'.         00285005
+002851    05 WS-DET-TYPE                   PIC X(15).                   00285105
+002852    05 FILLER                        PIC X(01) VALUE '|'.         00285205
+002853    05 WS-DET-QUANTITY               PIC -,---,---.00.            00285305
+002854    05 FILLER                        PIC X(01) VALUE '|'.         00285405
+002855    05 WS-DET-CURRENCY               PIC X(03).                   00285505
+002856    05 FILLER                        PIC X(01) VALUE '|'.         00285605
+002857    05 WS-DET-AMOUNT                 PIC -,---,---.00.            00285705
+002858    05 FILLER                        PIC X(01) VALUE '|'.         00285805
+002859*                                                                 00285905
+002860 01 WS-PREV-VARS.                                                 00286005
+002861    05 WS-PREV-CUSTID                PIC X(12) VALUE SPACES.      00286105
+002862    05 WS-PREV-BUY-SELL              PIC X VALUE SPACES.          00286205
+002863    05 WS-PREV-ORDER-STATUS          PIC X(3).                    00286305
+002864*                                                                 00286405
+002865 01 WS-MAX-ORDERS-PER-PAGE           PIC 9(4) COMP VALUE 60.      00286505
+002866*                                                                 00286605
+002867 01 WS-ORDER-COUNT            PIC S9(9) COMP VALUE 0.             00286705
+002868 01 WS-BUYER-SELLER-CUST-ID   PIC X(12).                          00286808
+002869 01 WS-ORD-BUY-SELL-IND       PIC X(1).                           00286908
+002870*                                                                 00287008
+002880 01 WS-SQLCODE                PIC  -(4).                          00288008
+002900*                                                                 00290001
+009700     EXEC SQL                                                     00970001
+009800          INCLUDE SQLCA                                           00980002
+009900     END-EXEC                                                     00990001
+009901*                                                                 00990102
+009902     EXEC SQL                                                     00990202
+009903          INCLUDE TBTRDORD                                        00990302
+009904     END-EXEC                                                     00990402
+009910*                                                                 00991001
+009920     EXEC SQL                                                     00992001
+009930          INCLUDE TBTRDSEC                                        00993001
+009940     END-EXEC                                                     00994001
+010000*                                                                 01000001
+010010     EXEC SQL                                                     01001001
+010020          INCLUDE TBTRDCUS                                        01002001
+010030     END-EXEC                                                     01003001
+010040*                                                                 01004001
+010900     EXEC SQL                                                     01090001
+011000          DECLARE CLIENT_ORDERS CURSOR WITH HOLD FOR              01100001
+011100          SELECT  A.ORD_TRADEID                                   01110008
+011110                 ,A.ORD_TRADING_XCHNG                             01111008
+011200                 ,A.ORD_BUY_SELL_IND                              01120008
+011300                 ,A.ORD_CUSTOMER_ID                               01130008
+011310                 ,CUS_DESCRIPTION                                 01131001
+011400                 ,A.ORD_FIGI                                      01140008
+011420                 ,SEC_SYMBOL                                      01142001
+011430                 ,SEC_DESCRIPTION                                 01143001
+011440                 ,SEC_TYPE                                        01144001
+011500                 ,A.ORD_QUANTITY                                  01150008
+011600                 ,A.ORD_CURRENCY                                  01160008
+011700                 ,A.ORD_AMOUNT                                    01170008
+011710                 ,A.ORD_STATUS                                    01171008
+011720                 ,B.ORD_CUSTOMER_ID                               01172011
+011800            FROM TBTRDORD A, TBTRDCUS, TBTRDSEC , TBTRDORD B      01180008
+011810            WHERE A.ORD_CUSTOMER_ID = CUS_CUSTOMER_ID             01181008
+011820              AND A.ORD_FIGI      = SEC_FIGI                      01182008
+011830              AND A.ORD_CURRENCY     = B.ORD_CURRENCY             01183010
+011840              AND A.ORD_TRADING_XCHNG= B.ORD_TRADING_XCHNG        01184010
+011850              AND A.ORD_TRADEID      = B.ORD_TRADEID              01185010
+011860              AND A.ORD_FIGI         = B.ORD_FIGI                 01186010
+011870              AND A.ORD_BUY_SELL_IND <> B.ORD_BUY_SELL_IND        01187010
+011900            ORDER BY A.ORD_CUSTOMER_ID ASC                        01190008
+012000                    ,A.ORD_BUY_SELL_IND ASC                       01200008
+012010                    ,A.ORD_CURRENCY   ASC                         01201008
+012100                    ,A.ORD_STATUS     ASC                         01210008
+012200                    ,A.ORD_TRADEID    ASC                         01220008
+012500     END-EXEC                                                     01250001
+012600                                                                  01260001
+012700*                                                                 01270001
+013200 PROCEDURE DIVISION.                                              01320001
+013300                                                                  01330001
+013400 0000-MAINLINE.                                                   01340001
+013500                                                                  01350001
+020400     PERFORM 1000-INITIALIZE                                      02040001
+020500        THRU 1000-EXIT                                            02050001
+020510                                                                  02051001
+020520     PERFORM 2000-OPEN-ORDER-CURSOR-RPTFILE                       02052002
+020530        THRU 2000-EXIT                                            02053001
+020600                                                                  02060001
+020700     PERFORM 3000-FETCH-PROCESS-ORDERS                            02070001
+020800        THRU 3000-EXIT                                            02080001
+020810       UNTIL 88-END-OF-ORDERS                                     02081001
+020820                                                                  02082001
+020830     PERFORM 4000-CLOS-ORDER-CURSOR-RPTFILE                       02083002
+020840        THRU 4000-EXIT                                            02084001
+020850                                                                  02085001
+020860*                                                                 02086018
+020870     EXEC SQL                                                     02087018
+020880         COMMIT                                                   02088018
+020890     END-EXEC.                                                    02089018
+020900*                                                                 02090018
+021115     GOBACK                                                       02111501
+021117     .                                                            02111701
+021118*                                                                 02111801
+021119 1000-INITIALIZE.                                                 02111901
+021120*                                                                 02112001
+021121     SET 88-PRINT-PAGE-HEADER TO TRUE                             02112101
+021122     MOVE SPACES TO WS-END-OF-ORDERS-SW                           02112201
+021123*                                                                 02112301
+021124     CONTINUE.                                                    02112401
+021125*                                                                 02112501
+021126 1000-EXIT.                                                       02112601
+021127     EXIT.                                                        02112701
+021130                                                                  02113001
+021140 2000-OPEN-ORDER-CURSOR-RPTFILE.                                  02114002
+021148*                                                                 02114808
+021149     EXEC SQL                                                     02114901
+021150         OPEN CLIENT_ORDERS                                       02115001
+021151     END-EXEC                                                     02115101
+021152                                                                  02115201
+021153     IF SQLCODE NOT = 0 THEN                                      02115301
+021154        MOVE SQLCODE  TO WS-SQLCODE                               02115401
+021155        DISPLAY 'Open Client_orders Cursor Failed - SQLCode = '   02115501
+021156                WS-SQLCODE                                        02115601
+021157        PERFORM 9999-TERMINATE                                    02115701
+021158     END-IF                                                       02115801
+021159*                                                                 02115901
+021160     OPEN OUTPUT REPORDER                                         02116001
+021161*                                                                 02116101
+021162     IF  REPORDER-FILE-STATUS = '00' THEN                         02116201
+021163         CONTINUE                                                 02116301
+021164     ELSE                                                         02116401
+021165        DISPLAY 'Open Order Report Failed - FileStatus = '        02116501
+021166                REPORDER-FILE-STATUS                              02116601
+021167        PERFORM 9999-TERMINATE                                    02116701
+021168     END-IF                                                       02116802
+021169*                                                                 02116901
+021170     CONTINUE.                                                    02117001
+021171*                                                                 02117101
+021172 2000-EXIT.                                                       02117201
+021173     EXIT.                                                        02117301
+021174                                                                  02117401
+021175 3000-FETCH-PROCESS-ORDERS.                                       02117501
+021176*                                                                 02117601
+021177     EXEC SQL                                                     02117701
+021178         FETCH CLIENT_ORDERS                                      02117801
+021179          INTO :ORD-TRADEID                                       02117901
+021180              ,:ORD-TRADING-XCHNG                                 02118001
+021181              ,:ORD-BUY-SELL-IND                                  02118101
+021182              ,:ORD-CUSTOMER-ID                                   02118201
+021183              ,:CUS-DESCRIPTION                                   02118301
+021184              ,:ORD-FIGI                                          02118401
+021185              ,:SEC-SYMBOL                                        02118501
+021186              ,:SEC-DESCRIPTION                                   02118601
+021187              ,:SEC-TYPE                                          02118701
+021188              ,:ORD-QUANTITY                                      02118801
+021189              ,:ORD-CURRENCY                                      02118901
+021190              ,:ORD-AMOUNT                                        02119001
+021191              ,:ORD-STATUS                                        02119101
+021192              ,:WS-BUYER-SELLER-CUST-ID                           02119211
+021193     END-EXEC                                                     02119301
+021194*                                                                 02119401
+021195     MOVE SQLCODE TO WS-SQLCODE                                   02119501
+021196*                                                                 02119601
+021197     EVALUATE SQLCODE                                             02119701
+021198         WHEN ZERO                                                02119801
+021199              CONTINUE                                            02119901
+021200         WHEN 100                                                 02120001
+021201              SET 88-END-OF-ORDERS TO TRUE                        02120101
+021202              WRITE REPORDER-RECORD FROM WS-DETAIL-HDR2           02120206
+021204              GO TO 3000-EXIT                                     02120401
+021205         WHEN OTHER                                               02120501
+021206              DISPLAY                                             02120601
+021207              'Fetch of Client_orders Cursor Failed - SQLCode = ' 02120701
+021208                      WS-SQLCODE                                  02120801
+021209              PERFORM 9999-TERMINATE                              02120901
+021210         END-EVALUATE                                             02121001
+021211*                                                                 02121101
+021212     IF ORD-CUSTOMER-ID  NOT = WS-PREV-CUSTID OR                  02121201
+021213        ORD-BUY-SELL-IND NOT = WS-PREV-BUY-SELL                   02121301
+021214        SET 88-PRINT-PAGE-HEADER TO TRUE                          02121401
+021215     ELSE                                                         02121501
+021216        IF ORD-STATUS NOT = WS-PREV-ORDER-STATUS                  02121601
+021217           SET 88-PRINT-HEADER1 TO TRUE                           02121701
+021218        END-IF                                                    02121801
+021219     END-IF                                                       02121901
+021220*                                                                 02122001
+021221     MOVE ORD-CUSTOMER-ID        TO  WS-PREV-CUSTID               02122101
+021222     MOVE ORD-BUY-SELL-IND       TO  WS-PREV-BUY-SELL             02122201
+021223     MOVE ORD-STATUS             TO  WS-PREV-ORDER-STATUS         02122301
+021224*                                                                 02122401
+021225     IF 88-PRINT-PAGE-HEADER                                      02122501
+021226        ADD 1 TO WS-PAGENUM                                       02122602
+021227        MOVE WS-PAGENUM TO WS-PH-PAGENUM                          02122702
+021228        MOVE  ORD-CUSTOMER-ID  TO WS-PH-Customer                  02122801
+021229        MOVE  CUS-DESCRIPTION  TO WS-PH-Customer-Desc             02122901
+021230        IF ORD-BUY-SELL-IND = 'B' THEN                            02123001
+021231           SET 88-PH-BUY-ORDERS TO TRUE                           02123101
+021232        ELSE                                                      02123201
+021233           SET 88-PH-SELL-ORDERS TO TRUE                          02123301
+021234        END-IF                                                    02123401
+021235*                                                                 02123501
+021236        WRITE REPORDER-RECORD FROM WS-EMPTY-HDR                   02123601
+021237        WRITE REPORDER-RECORD FROM WS-PAGE-HEADER                 02123701
+021238              AFTER ADVANCING PAGE                                02123801
+021240        SET 88-PRINT-HEADER1 TO TRUE                              02124001
+021241        MOVE 0 TO WS-ORDER-COUNT                                  02124101
+021242     END-IF                                                       02124201
+021243                                                                  02124301
+021244     IF 88-PRINT-HEADER1                                          02124401
+021245        MOVE  ORD-STATUS          TO WS-H1-ORDER-STATUS-CODE      02124501
+021246        EVALUATE ORD-STATUS                                       02124601
+021247          WHEN '101'                                              02124701
+021248            MOVE 'Accepted'            TO WS-H1-ORDER-STATUS-DESC 02124801
+021249          WHEN '201'                                              02124901
+021250            MOVE 'Matched'             TO WS-H1-ORDER-STATUS-DESC 02125001
+021251          WHEN '301'                                              02125101
+021252            MOVE 'Overdue-Buyer Invld' TO WS-H1-ORDER-STATUS-DESC 02125201
+021253          WHEN '302'                                              02125301
+021254            MOVE 'Overdue-SellerInvld' TO WS-H1-ORDER-STATUS-DESC 02125401
+021255          WHEN '303'                                              02125501
+021256            MOVE 'Overdue-Security'    TO WS-H1-ORDER-STATUS-DESC 02125601
+021257          WHEN '304'                                              02125701
+021258            MOVE 'Overdue-Buyer Acct'  TO WS-H1-ORDER-STATUS-DESC 02125801
+021259          WHEN '305'                                              02125901
+021260            MOVE 'Overdue-Seller Acct' TO WS-H1-ORDER-STATUS-DESC 02126001
+021261          WHEN '306'                                              02126101
+021262          WHEN '307'                                              02126201
+021263            MOVE 'Overdue-OrderStatus' TO WS-H1-ORDER-STATUS-DESC 02126301
+021264          WHEN '308'                                              02126401
+021265            MOVE 'Overdue-MissingOrdr' TO WS-H1-ORDER-STATUS-DESC 02126501
+021266          WHEN '401'                                              02126601
+021267            MOVE 'Overdue-Rejected'    TO WS-H1-ORDER-STATUS-DESC 02126701
+021268          WHEN '601'                                              02126801
+021269            MOVE 'Settled'             TO WS-H1-ORDER-STATUS-DESC 02126901
+021270          WHEN OTHER                                              02127001
+021271            MOVE 'Unknown'             TO WS-H1-ORDER-STATUS-DESC 02127101
+021272        END-EVALUATE                                              02127201
+021273*                                                                 02127301
+021274        WRITE REPORDER-RECORD FROM WS-EMPTY-HDR                   02127406
+021275*                                                                 02127506
+021276        WRITE REPORDER-RECORD FROM WS-HEADER1                     02127601
+021277              AFTER ADVANCING 2 LINES                             02127701
+021278*                                                                 02127801
+021279        WRITE REPORDER-RECORD FROM WS-EMPTY-HDR                   02127901
+021280*                                                                 02128001
+021281        SET  88-PRINT-DETAIL-HDR  TO TRUE                         02128101
+021282     END-IF                                                       02128201
+021283*                                                                 02128301
+021284     IF  88-PRINT-DETAIL-HDR                                      02128401
+021285        IF ORD-BUY-SELL-IND = 'B' THEN                            02128501
+021286           SET 88-DH1-SELLER     TO TRUE                          02128607
+021287        ELSE                                                      02128701
+021289           SET 88-DH1-BUYER TO TRUE                               02128907
+021290        END-IF                                                    02129001
+021291*                                                                 02129106
+021292        WRITE REPORDER-RECORD FROM WS-DETAIL-HDR2                 02129206
+021293*                                                                 02129306
+021294        WRITE REPORDER-RECORD FROM WS-DETAIL-HDR1                 02129401
+021295              AFTER ADVANCING 1 LINE                              02129501
+021296*                                                                 02129601
+021297        WRITE REPORDER-RECORD FROM WS-DETAIL-HDR2                 02129701
+021298*                                                                 02129801
+021299        SET 88-PRINT-DETAIL TO TRUE                               02129901
+021300     END-IF                                                       02130001
+021301*                                                                 02130101
+021310     MOVE  ORD-TRADEID          TO WS-DET-TRADEID                 02131001
+021312     MOVE  ORD-TRADING-XCHNG    TO WS-DET-TRADING-XCHNG           02131201
+021313     MOVE  ORD-FIGI             TO WS-DET-FIGI                    02131301
+021314     MOVE  SEC-SYMBOL           TO WS-DET-SYMBOL                  02131401
+021315     MOVE  SEC-DESCRIPTION      TO WS-DET-DESCRIPTION             02131501
+021316     MOVE  SEC-TYPE             TO WS-DET-TYPE                    02131601
+021317     MOVE  ORD-QUANTITY         TO WS-DET-QUANTITY                02131701
+021318     MOVE  ORD-CURRENCY         TO WS-DET-CURRENCY                02131801
+021319     MOVE  ORD-AMOUNT           TO WS-DET-AMOUNT                  02131901
+021342     MOVE WS-BUYER-SELLER-CUST-ID TO WS-DET-BUYER-SELLER          02134208
+021352*                                                                 02135201
+021353     ADD 1 TO WS-ORDER-COUNT                                      02135301
+021354     SET 88-PRINT-DETAIL TO TRUE                                  02135403
+021355     WRITE REPORDER-RECORD FROM WS-DETAIL-REC                     02135501
+021356     IF WS-ORDER-COUNT > WS-MAX-ORDERS-PER-PAGE THEN              02135601
+021357        WRITE REPORDER-RECORD FROM WS-DETAIL-HDR2                 02135706
+021358        SET  88-PRINT-PAGE-HEADER TO TRUE                         02135801
+021359     END-IF                                                       02135901
+021360                                                                  02136001
+021361     CONTINUE.                                                    02136101
+021362*                                                                 02136201
+021363 3000-EXIT.                                                       02136301
+021364     EXIT.                                                        02136401
+021365                                                                  02136501
+021366 4000-CLOS-ORDER-CURSOR-RPTFILE.                                  02136602
+021367*                                                                 02136701
+021368     EXEC SQL                                                     02136801
+021369         CLOSE CLIENT_ORDERS                                      02136901
+021370     END-EXEC                                                     02137001
+021371                                                                  02137101
+021372     IF SQLCODE NOT = 0 THEN                                      02137201
+021373        MOVE SQLCODE  TO WS-SQLCODE                               02137301
+021374        DISPLAY 'Close Client_orders Cursor Failed - SQLCode = '  02137401
+021375                WS-SQLCODE                                        02137501
+021376        PERFORM 9999-TERMINATE                                    02137601
+021377     END-IF                                                       02137701
+021378*                                                                 02137801
+021379     CLOSE REPORDER                                               02137901
+021380*                                                                 02138001
+021381     IF  REPORDER-FILE-STATUS = '00' THEN                         02138101
+021382         CONTINUE                                                 02138201
+021383     ELSE                                                         02138301
+021384        DISPLAY 'Close Order Report Failed - FileStatus = '       02138401
+021385                REPORDER-FILE-STATUS                              02138501
+021386        PERFORM 9999-TERMINATE                                    02138601
+021387     END-IF                                                       02138702
+021388*                                                                 02138801
+021389     CONTINUE.                                                    02138901
+021390*                                                                 02139001
+021400 4000-EXIT.                                                       02140001
+021500     EXIT.                                                        02150001
+021600*                                                                 02160001
+021610 9999-TERMINATE.                                                  02161001
+021611     MOVE 16 TO RETURN-CODE                                       02161115
+021620     DISPLAY 'Terminating TRDBP006 due to error!!'                02162001
+021630     GOBACK.                                                      02163001
+021700*                                                                 02170001

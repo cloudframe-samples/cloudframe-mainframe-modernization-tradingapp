@@ -1,0 +1,108 @@
+000100 IDENTIFICATION DIVISION.                                         00010001
+000200 PROGRAM-ID. MSTPB001.                                            00020010
+000300***************************************************************** 00030001
+000400*                                                               * 00040001
+000500* MSTPB001 : Master Database API to get Customer Details        * 00050010
+000600*                                                               * 00060001
+000700*  - This is a Common Master Data access API and while          * 00070001
+000800*    Trading application is migrated CloudFrame, this           * 00080001
+000900*    program can be retained back on mainframe for Call         * 00090001
+001000*    backs                                                      * 00100009
+002100*                                                               * 00210001
+002200***************************************************************** 00220001
+002300 ENVIRONMENT DIVISION.                                            00230001
+002400 DATA DIVISION.                                                   00240001
+002500 WORKING-STORAGE SECTION.                                         00250001
+002600*                                                                 00260001
+002720 01  WS-SQLCODE                PIC  -(4).                         00272001
+006600 01  WS-PROG-ERROR-MSGS.                                          00660001
+006700     05  WS-SYSTEM-EXCEPTION.                                     00670001
+006800         10  Filler              PIC  X(06) VALUE 'Abend '.       00680001
+006900         10  WS-ABCODE           PIC  X(04) VALUE SPACES.         00690001
+007000         10  Filler              PIC  X(31) VALUE                 00700001
+007100             ' encountered while processing, '.                   00710001
+007200         10  FILLER              PIC X(36) VALUE                  00720001
+007300             'abend caught by  MSTPB001           '.              00730010
+007400     05  WS-GETMAIN-FAILED.                                       00740001
+007500         10  Filler              PIC  X(40) VALUE                 00750001
+007600             'Getmain Failed in MSTPB001  EIBRESP = '.            00760010
+007700         10  Ws-GETMAIN-CODE     PIC  ----9.                      00770001
+007800     05  WS-APPL-EXCEPTION       PIC X(500).                      00780001
+007900     05  WS-DATA-EXCEPTION       PIC X(500).                      00790001
+009300*                                                                 00930001
+011100*                                                                 01110001
+011200 COPY EXCPTION.                                                   01120001
+011300*                                                                 01130001
+011400     EXEC SQL                                                     01140001
+011500          INCLUDE SQLCA                                           01150001
+011600     END-EXEC                                                     01160001
+011700*                                                                 01170001
+011800     EXEC SQL                                                     01180001
+011900          INCLUDE TBTRDCUS                                        01190001
+012000     END-EXEC                                                     01200001
+012001*                                                                 01200101
+013000*                                                                 01300001
+013100 LINKAGE SECTION.                                                 01310001
+013110 COPY CUSTOMER REPLACING ==:T:== BY ==LS==.                       01311001
+013200*                                                                 01320001
+013300 PROCEDURE DIVISION USING LS-CUSTOMER-IO.                         01330008
+013400                                                                  01340001
+013500 0000-MAINLINE.                                                   01350001
+019900                                                                  01990001
+019902* Set default to Exception                                        01990201
+019910     SET 88-CUSTOMER-EXCEPTION TO TRUE                            01991001
+019911     MOVE SPACES TO LS-CUSTOMER-ERROR-MSG                         01991101
+019920                                                                  01992001
+020000     PERFORM 1000-GET-CUSTOMER                                    02000001
+020100        THRU 1000-EXIT                                            02010001
+020200                                                                  02020001
+020300     GOBACK                                                       02030008
+020600     .                                                            02060001
+020700*                                                                 02070001
+020800 1000-GET-CUSTOMER.                                               02080001
+090000     MOVE LS-CUSTOMER-ID  TO  CUS-CUSTOMER-ID                     09000001
+090200*                                                                 09020001
+090300     EXEC SQL                                                     09030001
+090400         SELECT                                                   09040001
+090500               CUS_CURRENCY                                       09050001
+090600             , CUS_DESCRIPTION                                    09060001
+090610             , CUS_STATUS                                         09061007
+090700          INTO :CUS-CURRENCY                                      09070001
+090800              ,:CUS-DESCRIPTION                                   09080001
+090810              ,:CUS-STATUS                                        09081007
+090900          FROM TBTRDCUS                                           09090001
+091000          WHERE                                                   09100001
+091100                CUS_CUSTOMER_ID   = :CUS-CUSTOMER-ID              09110001
+091300     END-EXEC.                                                    09130001
+091400     MOVE SQLCODE TO WS-SQLCODE                                   09140001
+091500                                                                  09150001
+091600     EVALUATE SQLCODE                                             09160001
+091700         WHEN 0                                                   09170001
+091710              MOVE CUS-CURRENCY    TO LS-CUSTOMER-CURRENCY        09171001
+091720              MOVE CUS-DESCRIPTION TO LS-CUSTOMER-DESCRIPTION     09172001
+091800              IF CUS-STATUS = 'A'                                 09180001
+091810                 SET 88-CUSTOMER-ACTIVE TO TRUE                   09181001
+092000              ELSE                                                09200001
+092010                 SET 88-CUSTOMER-INACTIVE TO TRUE                 09201001
+092020                 MOVE 'Customer is Inactive'                      09202001
+092030                   TO LS-CUSTOMER-ERROR-MSG                       09203001
+094900              END-IF                                              09490001
+095000         WHEN 100                                                 09500001
+095100              SET 88-CUSTOMER-NOT-FOUND TO TRUE                   09510001
+095110              MOVE 'Customer Not Found'                           09511001
+095120                TO LS-CUSTOMER-ERROR-MSG                          09512001
+097900         WHEN OTHER                                               09790001
+097910              SET 88-CUSTOMER-EXCEPTION TO TRUE                   09791001
+097911              MOVE SPACES TO LS-CUSTOMER-ERROR-MSG                09791101
+097913              String                                              09791301
+097920                   'Customer Access failed. SQLCODE = '           09792001
+097921                   WS-SQLCODE                                     09792101
+097922                DELIMITED BY SIZE                                 09792203
+097930                INTO LS-CUSTOMER-ERROR-MSG                        09793001
+097940              End-String                                          09794001
+099100     END-EVALUATE                                                 09910001
+099200     .                                                            09920001
+099300*                                                                 09930001
+099400 1000-EXIT.                                                       09940001
+099410     EXIT.                                                        09941006
+099500*                                                                 09950001

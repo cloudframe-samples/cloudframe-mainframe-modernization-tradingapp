@@ -1,0 +1,176 @@
+000100 IDENTIFICATION DIVISION.                                         00010000
+000200 PROGRAM-ID. TRDPB002.                                            00020009
+000300***************************************************************** 00030000
+000400*                                                               * 00040000
+000500* TRDPB002 : Securities Book-keeping Program                    * 00050009
+000600*                                                               * 00060000
+000700*  - Settles Securities Account of Buyer/Seller by debiting     * 00070000
+000800*    Seller Security Account and Crediting Buyer Security       * 00080000
+000900*    Account                                                    * 00090000
+001100*                                                               * 00110000
+001200***************************************************************** 00120000
+001300 ENVIRONMENT DIVISION.                                            00130000
+001400 DATA DIVISION.                                                   00140000
+001500 WORKING-STORAGE SECTION.                                         00150000
+001600*                                                                 00160000
+001700 01  WS-SQLCODE                PIC  -(4).                         00170000
+001710 01  WS-SWITCHES.                                                 00171000
+001720     05 WS-CR-DB-SWTICH        PIC X.                             00172000
+001730        88 DEBIT-SELLER        VALUE 'D'.                         00173000
+001740        88 CREDIT-BUYER        VALUE 'C'.                         00174000
+001800 01  WS-PROG-ERROR-MSGS.                                          00180000
+003100     05  WS-EXCEPTION            PIC X(200).                      00310008
+004600*                                                                 00460000
+004710     EXEC SQL                                                     00471005
+004720         INCLUDE EXCPTION                                         00472005
+004730     END-EXEC                                                     00473005
+004800*                                                                 00480000
+004900     EXEC SQL                                                     00490000
+005000          INCLUDE SQLCA                                           00500000
+005100     END-EXEC                                                     00510000
+005200*                                                                 00520000
+005300     EXEC SQL                                                     00530000
+005400          INCLUDE TBTRDPOS                                        00540001
+005500     END-EXEC                                                     00550000
+005600*                                                                 00560000
+005610     EXEC SQL                                                     00561000
+005620          DECLARE POS_BOOKING  CURSOR FOR                         00562000
+005630          SELECT  POS_BALANCE                                     00563000
+005691            FROM TBTRDPOS                                         00569100
+005692            WHERE                                                 00569200
+005693                 POS_CURRENCY      = :POS-CURRENCY                00569300
+005694             AND POS_SAC_NUMBER    = :POS-SAC-NUMBER              00569401
+005695             AND POS_FIGI          = :POS-FIGI                    00569501
+005696            FOR UPDATE OF POS_BALANCE                             00569600
+005698     END-EXEC                                                     00569800
+005700*                                                                 00570000
+005800 LINKAGE SECTION.                                                 00580000
+005900 COPY TRDORDER.                                                   00590000
+006000*                                                                 00600000
+006100 PROCEDURE DIVISION USING TRD-ORDER-PAIR.                         00610008
+006200                                                                  00620000
+006300 0000-MAINLINE.                                                   00630000
+006400                                                                  00640000
+008200* Set default to Booking Failed                                   00820000
+008300     SET TRD-SAC-BOOKING-FAILED TO TRUE                           00830000
+008310                                                                  00831000
+008320     SET  DEBIT-SELLER TO TRUE                                    00832001
+008600     PERFORM 1000-SAC-BOOKING                                     00860000
+008700        THRU 1000-EXIT                                            00870000
+008701                                                                  00870100
+008702     IF TRD-SAC-BOOKING-DONE THEN                                 00870201
+008703* Reset back to Booking Failed and attempt Crediting Seller       00870301
+008704        SET TRD-SAC-BOOKING-FAILED TO TRUE                        00870401
+008710        SET  CREDIT-BUYER TO TRUE                                 00871001
+008720        PERFORM 1000-SAC-BOOKING                                  00872001
+008730           THRU 1000-EXIT                                         00873001
+008740     END-IF                                                       00874001
+008800                                                                  00880000
+008900     GOBACK                                                       00890008
+009200     .                                                            00920000
+009300*                                                                 00930000
+009400 1000-SAC-BOOKING.                                                00940000
+009410*                                                                 00941000
+009420     IF DEBIT-SELLER                                              00942000
+009430        MOVE TRD-CURRENCY             TO POS-CURRENCY             00943000
+009431        MOVE TRD-SELLER-SEC-ACC-NUM   TO POS-SAC-NUMBER           00943101
+009432        MOVE TRD-FIGI                 TO POS-FIGI                 00943200
+009433        DISPLAY 'TRD-CURRENCY          =' TRD-CURRENCY            00943312
+009434        DISPLAY 'TRD-SELLER-SEC-ACC-NUM=' TRD-SELLER-SEC-ACC-NUM  00943412
+009435        DISPLAY 'TRD-FIGI              =' TRD-FIGI                00943512
+009436     ELSE                                                         00943612
+009437        MOVE TRD-CURRENCY             TO POS-CURRENCY             00943712
+009438        MOVE TRD-BUYER-SEC-ACC-NUM    TO POS-SAC-NUMBER           00943812
+009439        MOVE TRD-FIGI                 TO POS-FIGI                 00943912
+009440        DISPLAY 'TRD-CURRENCY          =' TRD-CURRENCY            00944012
+009441        DISPLAY 'TRD-BUYER-SEC-ACC-NUM =' TRD-BUYER-SEC-ACC-NUM   00944112
+009442        DISPLAY 'TRD-FIGI              =' TRD-FIGI                00944212
+009450     END-IF                                                       00945000
+009600*                                                                 00960000
+009700     EXEC SQL                                                     00970000
+009800         OPEN POS_BOOKING                                         00980000
+009900     END-EXEC                                                     00990000
+010000*                                                                 01000000
+010100     IF SQLCODE NOT = 0 THEN                                      01010000
+010110        SET TRD-SAC-BOOKING-FAILED TO TRUE                        01011001
+010200        MOVE SQLCODE TO WS-SQLCODE                                01020000
+010300        SET DATA-EXCEPTION TO TRUE                                01030001
+010400        MOVE SPACES TO WS-EXCEPTION                               01040008
+010500        STRING                                                    01050000
+010600           'Open POS_BOOKING Cursor failed : SQLCODE = '          01060000
+010700           WS-SQLCODE                                             01070000
+010800           DELIMITED BY SIZE                                      01080000
+010900          INTO WS-EXCEPTION                                       01090008
+011000        END-STRING                                                01100000
+011100        PERFORM 9000-REPORT-EXCEPTION                             01110000
+011101           THRU 9000-EXIT                                         01110107
+011110        GO TO 1000-EXIT                                           01111001
+011200     END-IF                                                       01120000
+011300*                                                                 01130000
+011400     EXEC SQL                                                     01140000
+011500         FETCH POS_BOOKING                                        01150000
+011600          INTO :POS-BALANCE                                       01160001
+012300     END-EXEC                                                     01230000
+012400*                                                                 01240000
+012410     IF SQLCODE = 0 THEN                                          01241001
+012411        IF DEBIT-SELLER                                           01241101
+012412           COMPUTE POS-BALANCE = POS-BALANCE - TRD-ORDER-QTY      01241201
+012413        ELSE                                                      01241301
+012414           COMPUTE POS-BALANCE = POS-BALANCE + TRD-ORDER-QTY      01241401
+012415        END-IF                                                    01241501
+012416        EXEC SQL                                                  01241601
+012417             UPDATE TBTRDPOS                                      01241701
+012418               SET POS_BALANCE      = :POS-BALANCE                01241801
+012419             WHERE POS_CURRENCY     = :POS-CURRENCY               01241910
+012420               AND POS_SAC_NUMBER   = :POS-SAC-NUMBER             01242011
+012421               AND POS_FIGI         = :POS-FIGI                   01242111
+012424        END-EXEC                                                  01242401
+012425*            WHERE CURRENT OF POS_BOOKING                         01242510
+012426        IF SQLCODE = 0 THEN                                       01242601
+012427           SET TRD-SAC-BOOKING-DONE TO TRUE                       01242701
+012428        ELSE                                                      01242801
+012429           SET TRD-SAC-BOOKING-FAILED TO TRUE                     01242901
+012430           MOVE SQLCODE TO WS-SQLCODE                             01243001
+012431           SET DATA-EXCEPTION TO TRUE                             01243101
+012432           MOVE SPACES TO WS-EXCEPTION                            01243208
+012433           STRING                                                 01243301
+012434              'Update using POS_BOOKING Cursor failed : '         01243401
+012435              'SQLCODE = '                                        01243501
+012436              WS-SQLCODE                                          01243601
+012437              DELIMITED BY SIZE                                   01243701
+012438             INTO WS-EXCEPTION                                    01243808
+012439           END-STRING                                             01243901
+012440           PERFORM 9000-REPORT-EXCEPTION                          01244001
+012441              THRU 9000-EXIT                                      01244107
+012442        END-IF                                                    01244201
+012450     ELSE                                                         01245002
+012600        SET TRD-SAC-BOOKING-FAILED TO TRUE                        01260001
+012700        MOVE SQLCODE TO WS-SQLCODE                                01270001
+012800        SET DATA-EXCEPTION TO TRUE                                01280001
+012900        MOVE SPACES TO WS-EXCEPTION                               01290008
+012910        DISPLAY 'SQLCODE = ' WS-SQLCODE                           01291012
+012920        DISPLAY 'POS-CURRENCY   = ' POS-CURRENCY                  01292012
+012930        DISPLAY 'POS-SAC-NUMBER = ' POS-SAC-NUMBER                01293013
+012940        DISPLAY 'POS-FIGI       = ' POS-FIGI                      01294013
+013000        STRING                                                    01300014
+013100           'Fetch POS_BOOKING Cursor failed : SQLCODE = '         01310001
+013200           WS-SQLCODE                                             01320001
+013300           DELIMITED BY SIZE                                      01330001
+013310          INTO WS-EXCEPTION                                       01331008
+013311        END-STRING                                                01331101
+013312        PERFORM 9000-REPORT-EXCEPTION                             01331201
+013313           THRU 9000-EXIT                                         01331307
+013320     END-IF                                                       01332000
+013330     EXEC SQL                                                     01333006
+013340         CLOSE POS_BOOKING                                        01334006
+013350     END-EXEC                                                     01335006
+013400     .                                                            01340000
+013500*                                                                 01350000
+013600 1000-EXIT.                                                       01360000
+013700     EXIT.                                                        01370000
+013800*                                                                 01380000
+013900******************************************************            01390000
+016800*                                                                 01680001
+016900     EXEC SQL                                                     01690001
+017000         INCLUDE EXCPCOPY                                         01700001
+017100     END-EXEC.                                                    01710001

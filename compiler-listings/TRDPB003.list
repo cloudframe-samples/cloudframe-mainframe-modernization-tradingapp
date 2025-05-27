@@ -1,0 +1,1250 @@
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0                         Date 04/19/2023  Time 21:07:40   Page     1
+0Invocation parameters:
+  MAP,XREF,OFFSET,LIB,ARITH(EXTEND),LIB,TRUNC(BIN),TEST(ALL,SYM,SEPARATE)
+
+         IGYOS4069-I   Some suboptions specified in "TEST(ALL,SYM,SEPARATE)" are not  supported.  "ALL", "BLOCK", "PATH" and "STMT"
+                       were interpreted as "HOOK" and the "NONE" suboption was interpreted as "NOHOOK".  The "SYM" suboption is no
+                       longer required, "SYM" suboption behavior is always in effect with "TEST".
+
+0Options in effect:
+  NOADATA
+    ADV
+    QUOTE
+    ARITH(EXTEND)
+  NOAWO
+    BUFSIZE(4096)
+  NOCICS
+    CODEPAGE(1140)
+  NOCOMPILE(S)
+  NOCURRENCY
+    DATA(31)
+  NODATEPROC
+    DBCS
+  NODECK
+  NODIAGTRUNC
+  NODLL
+  NODUMP
+  NODYNAM
+  NOEXIT
+  NOEXPORTALL
+  NOFASTSRT
+    FLAG(I,I)
+  NOFLAGSTD
+    INTDATE(ANSI)
+    LANGUAGE(EN)
+    LIB
+    LINECOUNT(60)
+  NOLIST
+    MAP
+  NOMDECK
+  NONAME
+    NSYMBOL(NATIONAL)
+  NONUMBER
+    NUMPROC(NOPFD)
+    OBJECT
+    OFFSET
+  NOOPTIMIZE
+    OUTDD(SYSOUT)
+    PGMNAME(COMPAT)
+    RENT
+    RMODE(AUTO)
+    SEQUENCE
+    SIZE(MAX)
+    SOURCE
+    SPACE(1)
+  NOSQL
+    SQLCCSID
+  NOSSRANGE
+  NOTERM
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0                         Date 04/19/2023  Time 21:07:40   Page     2
+0   TEST(HOOK,SEPARATE,NOEJPD)
+  NOTHREAD
+    TRUNC(BIN)
+  NOVBREF
+  NOWORD
+    XMLPARSE(XMLSS)
+    XREF(FULL)
+    YEARWINDOW(1900)
+    ZWB
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0                         Date 04/19/2023  Time 21:07:40   Page     3
+0LineID  Message code  Library phase message text
+
+         IGYLI0090-W   2 sequence errors were found in this program.
+-Messages    Total    Informational    Warning    Error    Severe    Terminating
+0Printed:       1                          1
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     4
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0/* TRDPB002
+   000001         000100 IDENTIFICATION DIVISION.                                         00010000
+   000002         000200 PROGRAM-ID. TRDPB002.                                            00020006
+   000003         000300***************************************************************** 00030000
+   000004         000400*                                                               * 00040000
+   000005         000500* TRDPB002 : Money Book-keeping Program                         * 00050006
+   000006         000600*                                                               * 00060000
+   000007         000700*  - Settles Securities Account of Buyer/Seller by crediting    * 00070000
+   000008         000800*    Seller Security Account and Debiting  Buyer Security       * 00080000
+   000009         000900*    Account                                                    * 00090000
+   000010         001000*                                                               * 00100000
+   000011         001100***************************************************************** 00110000
+   000012         001200 ENVIRONMENT DIVISION.                                            00120000
+   000013         001300 DATA DIVISION.                                                   00130000
+   000014         001400 WORKING-STORAGE SECTION.                                         00140000
+   000015         001500*                                                                 00150000
+   000016         001600 01  WS-SQLCODE                PIC  -(4).                         00160000 BLW=00000+000         4C
+   000017         001700 01  WS-SWITCHES.                                                 00170000 BLW=00000+008         0CL1
+   000018         001710     05 WS-CR-DB-SWTICH        PIC X.                             00171000 BLW=00000+008,0000000 1C
+   000019         001720        88 CREDIT-SELLER       VALUE 'D'.                         00172000
+   000020         001730        88 DEBIT-BUYER         VALUE 'C'.                         00173000
+   000021         001795 01  WS-PROG-ERROR-MSGS.                                          00179500 BLW=00000+010         0CL200
+   000022         002500     05  WS-EXCEPTION            PIC X(200).                      00250005 BLW=00000+010,0000000 200C
+   000023         004100*                                                                 00410000
+   000024         004210*****EXEC SQL                                                     00421002
+   000025         004220*****    INCLUDE EXCPTION                                         00422002
+   000026               *****END-EXEC                                                     00423002
+   000027**       000001 01  WS-EXCEPTION-HANDLER             PIC  X(16)                  00000110 BLW=00000+0D8         16C
+   000028         000002     VALUE 'TRDPBEXC'.                                            00000212
+   000029         000003 01  WS-DATE-TIME-VARS.                                           00000309 BLW=00000+0E8         0CL18
+   000030         000007     05 WS-CURRDATE          PIC X(10).                           00000708 BLW=00000+0E8,0000000 10C
+   000031         000008     05 WS-CURRTIME          PIC X(8).                            00000808 BLW=00000+0F2,000000A 8C
+   000032         000009*                                                                 00000904
+   000033         000010 01  WS-EXCP-TYPE                     PIC X.                      00001005 BLW=00000+100         1C
+   000034         000020     88 NO-EXCEPTIONS                 VALUE 'N'.                  00002005
+   000035         000030     88 SYSTEM-EXCEPTION              VALUE 'S'.                  00003005
+   000036         000040     88 APPL-EXCEPTION                VALUE 'A'.                  00004005
+   000037         000060     88 DATA-EXCEPTION                VALUE 'D'.                  00006005
+   000038         000070*                                                                 00007004
+   000039         000091 01 EXCEPTION-RECORD-LEN              PIC S9(4) COMP.             00009111 BLW=00000+108         2C
+   000040         000092*                                                                 00009211
+   000041         000100 01 EXCEPTION-RECORD.                                             00010000 BLW=00000+110         0CL1020
+   000042         000200*   05 EXCEPTION-TIMESTAMP            PIC X(26).                  00020013
+   000043         000300    05 EXCEPTION-TYPE                 PIC X(20).                  00030000 BLW=00000+110,0000000 20C
+   000044         000301     88 EXCEPTION-SYSTEM              VALUE 'SYSTEM'.             00030111
+   000045         000302     88 EXCEPTION-APPLICATION         VALUE 'APPLICATION'.        00030211
+   000046         000303     88 EXCEPTION-DATA                VALUE 'DATA'.               00030311
+   000047         000400    05 EXCEPTION-DESC                 PIC X(1000).                00040002 BLW=00000+124,0000014 1000C
+   000048         004300*                                                                 00430000
+   000049         004400*****EXEC SQL                                                     00440000
+   000050         004500*****     INCLUDE SQLCA                                           00450000
+   000051               *****END-EXEC                                                     00460000
+   000052                 01 SQLCA.                                                                BLW=00000+510         0CL136
+   000053                    05 SQLCAID     PIC X(8).                                              BLW=00000+510,0000000 8C
+   000054                    05 SQLCABC     PIC S9(9) COMP-5.                                      BLW=00000+518,0000008 4C
+   000055                    05 SQLCODE     PIC S9(9) COMP-5.                                      BLW=00000+51C,000000C 4C
+   000056                    05 SQLERRM.                                                           BLW=00000+520,0000010 0CL72
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     5
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000057                       49 SQLERRML PIC S9(4) COMP-5.                                      BLW=00000+520,0000010 2C
+   000058                       49 SQLERRMC PIC X(70).                                             BLW=00000+522,0000012 70C
+   000059                    05 SQLERRP     PIC X(8).                                              BLW=00000+568,0000058 8C
+   000060                    05 SQLERRD     OCCURS 6 TIMES                                         BLW=00000+570,0000060 4C
+   000061                                   PIC S9(9) COMP-5.
+   000062                    05 SQLWARN.                                                           BLW=00000+588,0000078 0CL8
+   000063                       10 SQLWARN0 PIC X.                                                 BLW=00000+588,0000078 1C
+   000064                       10 SQLWARN1 PIC X.                                                 BLW=00000+589,0000079 1C
+   000065                       10 SQLWARN2 PIC X.                                                 BLW=00000+58A,000007A 1C
+   000066                       10 SQLWARN3 PIC X.                                                 BLW=00000+58B,000007B 1C
+   000067                       10 SQLWARN4 PIC X.                                                 BLW=00000+58C,000007C 1C
+   000068                       10 SQLWARN5 PIC X.                                                 BLW=00000+58D,000007D 1C
+   000069                       10 SQLWARN6 PIC X.                                                 BLW=00000+58E,000007E 1C
+   000070                       10 SQLWARN7 PIC X.                                                 BLW=00000+58F,000007F 1C
+   000071                    05 SQLEXT.                                                            BLW=00000+590,0000080 0CL8
+   000072                       10 SQLWARN8 PIC X.                                                 BLW=00000+590,0000080 1C
+   000073                       10 SQLWARN9 PIC X.                                                 BLW=00000+591,0000081 1C
+   000074                       10 SQLWARNA PIC X.                                                 BLW=00000+592,0000082 1C
+   000075                       10 SQLSTATE PIC X(5).                                              BLW=00000+593,0000083 5C
+   000076         004700*                                                                 00470000
+   000077         004800*****EXEC SQL                                                     00480000
+   000078         004900*****     INCLUDE TBTRDMAC                                        00490000
+   000079               *****END-EXEC                                                     00500000
+   000080               ******************************************************************
+   000081               * DCLGEN TABLE(TRADE.TBTRDMAC)                                   *
+   000082               *        LIBRARY(CLOUDFRM.TRADING.BATCHDB2.DCLGEN(TBTRDMAC))     *
+   000083               *        ACTION(REPLACE)                                         *
+   000084               *        LANGUAGE(COBOL)                                         *
+   000085               *        QUOTE                                                   *
+   000086               *        INDVAR(YES)                                             *
+   000087               * ... IS THE DCLGEN COMMAND THAT MADE THE FOLLOWING STATEMENTS   *
+   000088               ******************************************************************
+   000089               *****EXEC SQL DECLARE TRADE.TBTRDMAC TABLE
+   000090               *****( MAC_CURRENCY                   CHAR(3) NOT NULL,
+   000091               *****  MAC_NUMBER                     INTEGER NOT NULL,
+   000092               *****  MAC_CUSTOMER_ID                CHAR(12) NOT NULL,
+   000093               *****  MAC_BALANCE                    DECIMAL(12, 2) NOT NULL,
+   000094               *****  MAC_STATUS                     CHAR(1) NOT NULL
+   000095               *****) END-EXEC.
+   000096               ******************************************************************
+   000097               * COBOL DECLARATION FOR TABLE TRADE.TBTRDMAC                     *
+   000098               ******************************************************************
+   000099                01  DCLTBTRDMAC.                                                          BLW=00000+598         0CL27
+   000100                    10 MAC-CURRENCY         PIC X(3).                                     BLW=00000+598,0000000 3C
+   000101                    10 MAC-NUMBER           PIC S9(9) USAGE COMP.                         BLW=00000+59B,0000003 4C
+   000102                    10 MAC-CUSTOMER-ID      PIC X(12).                                    BLW=00000+59F,0000007 12C
+   000103                    10 MAC-BALANCE          PIC S9(10)V9(2) USAGE COMP-3.                 BLW=00000+5AB,0000013 7P
+   000104                    10 MAC-STATUS           PIC X(1).                                     BLW=00000+5B2,000001A 1C
+   000105               ******************************************************************
+   000106               * INDICATOR VARIABLE STRUCTURE                                   *
+   000107               ******************************************************************
+   000108                01  ITBTRDMAC.                                                            BLW=00000+5B8         0CL10
+   000109                    10 INDSTRUC           PIC S9(4) USAGE COMP OCCURS 5 TIMES.            BLW=00000+5B8,0000000 2C
+   000110               ******************************************************************
+   000111               * THE NUMBER OF COLUMNS DESCRIBED BY THIS DECLARATION IS 5       *
+   000112               ******************************************************************
+   000113         005100*                                                                 00510000
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     6
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000114         005200*****EXEC SQL                                                     00520000
+   000115         005300*****     DECLARE MAC_BOOKING  CURSOR FOR                         00530000
+   000116         005400*****     SELECT  MAC_BALANCE                                     00540000
+   000117         005500*****       FROM TBTRDMAC                                         00550000
+   000118         005600*****       WHERE                                                 00560000
+   000119         005610*****            MAC_CURRENCY      = :MAC-CURRENCY                00561000
+   000120         005620*****        AND MAC_NUMBER        = :MAC-NUMBER                  00562000
+   000121         005640*****       FOR UPDATE OF MAC_BALANCE                             00564000
+   000122               *****END-EXEC                                                     00565000
+   000123         005660*                                                                 00566000
+   000124                 01 SQL-VERS.                                                             BLW=00000+5C8         0CL68
+   000125                    05 SQL-VERS-PREF    PIC X(04) VALUE 'VER.'.                           BLW=00000+5C8,0000000 4C
+   000126                    05 SQL-VERS-DATA    PIC X(64)                                         BLW=00000+5CC,0000004 64C
+   000127                                        VALUE '2023-04-20-01.07.39.846492'.
+   000128                 77 SQL-TEMP      PIC X(128).                                             BLW=00000+610         128C
+   000129                 77 DSN-TEMP      PIC S9(9)  COMP-5.                                      BLW=00000+690         4C
+   000130                 77 DSN-TMP2      PIC S9(18) COMP-3.                                      BLW=00000+698         10P
+   000131                 77 DSNNROWS      PIC S9(9)  COMP-5.                                      BLW=00000+6A8         4C
+   000132                 77 DSNNTYPE      PIC S9(4)  COMP-5.                                      BLW=00000+6B0         2C
+   000133                 77 DSNNLEN       PIC S9(4)  COMP-5.                                      BLW=00000+6B8         2C
+   000134                 77 SQL-NULL      PIC S9(9) COMP-5 VALUE +0.                              BLW=00000+6C0         4C
+   000135                 77 SQL-INIT-FLAG PIC S9(4) COMP-5 VALUE +0.                              BLW=00000+6C8         2C
+   000136                    88 SQL-INIT-DONE VALUE +1.
+   000137                 77 SQL-FILE-READ      PIC S9(9) COMP-5 VALUE +2.                         BLW=00000+6D0         4C
+   000138                 77 SQL-FILE-CREATE    PIC S9(9) COMP-5 VALUE +8.                         BLW=00000+6D8         4C
+   000139                 77 SQL-FILE-OVERWRITE PIC S9(9) COMP-5 VALUE +16.                        BLW=00000+6E0         4C
+   000140                 77 SQL-FILE-APPEND    PIC S9(9) COMP-5 VALUE +32.                        BLW=00000+6E8         4C
+   000141                 01 SQL-PLIST3.                                                           BLW=00000+6F0         0CL168
+   000142                    05 SQL-PLIST-CON   PIC S9(9) COMP-5 VALUE +4210688.                   BLW=00000+6F0,0000000 4C
+   000143                    05 SQL-CALLTYPE    PIC S9(4) COMP-5 VALUE +50.                        BLW=00000+6F4,0000004 2C
+   000144                    05 SQL-PROG-NAME   PIC X(8)  VALUE X'5452445042303033'.               BLW=00000+6F6,0000006 8C
+   000145                    05 SQL-TIMESTAMP-1 PIC S9(9) COMP-5 VALUE +463836390.                 BLW=00000+6FE,000000E 4C
+   000146                    05 SQL-TIMESTAMP-2 PIC S9(9) COMP-5 VALUE +512087840.                 BLW=00000+702,0000012 4C
+   000147                    05 SQL-SECTION     PIC S9(4) COMP-5 VALUE +1.                         BLW=00000+706,0000016 2C
+   000148                    05 SQL-CODEPTR     PIC S9(9) COMP-5.                                  BLW=00000+708,0000018 4C
+   000149                    05 SQL-VPARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+70C,000001C 4C
+   000150                    05 SQL-APARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+710,0000020 4C
+   000151                    05 FILLER          PIC S9(4) COMP-5 VALUE +1208.                      BLW=00000+714,0000024 2C
+   000152                    05 SQL-STMT-TYPE   PIC S9(4) COMP-5 VALUE +3.                         BLW=00000+716,0000026 2C
+   000153                    05 SQL-STMT-NUM    PIC S9(9) COMP-5 VALUE +136.                       BLW=00000+718,0000028 4C
+   000154                    05 SQL-PLIST-FLG   PIC S9(4) COMP-5 VALUE +0.                         BLW=00000+71C,000002C 2C
+   000155                    05 FILLER          PIC X(18) VALUE                                    BLW=00000+71E,000002E 18C
+   000156                       X'000000000000000000000000000000000000'.
+   000157                    05 SQL-PVAR-LIST3.                                                    BLW=00000+730,0000040 0CL104
+   000158                       10 PRE-SQLDAID  PIC X(8)  VALUE 'SQLDA  Ê'.                        BLW=00000+730,0000040 8C
+   000159                       10 PRE-SQLDABC  PIC S9(9) COMP-5 VALUE +104.                       BLW=00000+738,0000048 4C
+   000160                       10 PRE-SQLN     PIC S9(4) COMP-5 VALUE +2.                         BLW=00000+73C,000004C 2C
+   000161                       10 PRE-SQLLD    PIC S9(4) COMP-5 VALUE +2.                         BLW=00000+73E,000004E 2C
+   000162                       10 PRE-SQLVAR.                                                     BLW=00000+740,0000050 0CL88
+   000163                         12 SQLVAR-BASE1.                                                 BLW=00000+740,0000050 0CL44
+   000164                           15 SQL-PVAR-TYPE1      PIC S9(4) COMP-5 VALUE +452.            BLW=00000+740,0000050 2C
+   000165                           15 SQL-PVAR-LEN1       PIC S9(4) COMP-5 VALUE +3.              BLW=00000+742,0000052 2C
+   000166                           15 SQL-PVAR-ADDRS1.                                            BLW=00000+744,0000054 0CL8
+   000167                              20 SQL-PVAR-ADDR1   PIC S9(9) COMP-5.                       BLW=00000+744,0000054 4C
+   000168                              20 SQL-PVAR-IND1    PIC S9(9) COMP-5.                       BLW=00000+748,0000058 4C
+   000169                           15 SQL-PVAR-NAME1.                                             BLW=00000+74C,000005C 0CL32
+   000170                              20 SQL-PVAR-NAMEL1  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+74C,000005C 2C
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     7
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000171                              20 SQL-PVAR-NAMEC1  PIC X(30) VALUE ' '.                    BLW=00000+74E,000005E 30C
+   000172                         12 SQLVAR-BASE2.                                                 BLW=00000+76C,000007C 0CL44
+   000173                           15 SQL-PVAR-TYPE2      PIC S9(4) COMP-5 VALUE +496.            BLW=00000+76C,000007C 2C
+   000174                           15 SQL-PVAR-LEN2       PIC S9(4) COMP-5 VALUE +4.              BLW=00000+76E,000007E 2C
+   000175                           15 SQL-PVAR-ADDRS2.                                            BLW=00000+770,0000080 0CL8
+   000176                              20 SQL-PVAR-ADDR2   PIC S9(9) COMP-5.                       BLW=00000+770,0000080 4C
+   000177                              20 SQL-PVAR-IND2    PIC S9(9) COMP-5.                       BLW=00000+774,0000084 4C
+   000178                           15 SQL-PVAR-NAME2.                                             BLW=00000+778,0000088 0CL32
+   000179                              20 SQL-PVAR-NAMEL2  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+778,0000088 2C
+   000180                              20 SQL-PVAR-NAMEC2  PIC X(30) VALUE ' '.                    BLW=00000+77A,000008A 30C
+   000181                 01 SQL-PLIST4.                                                           BLW=00000+798         0CL124
+   000182                    05 SQL-PLIST-CON   PIC S9(9) COMP-5 VALUE +4195328.                   BLW=00000+798,0000000 4C
+   000183                    05 SQL-CALLTYPE    PIC S9(4) COMP-5 VALUE +30.                        BLW=00000+79C,0000004 2C
+   000184                    05 SQL-PROG-NAME   PIC X(8)  VALUE X'5452445042303033'.               BLW=00000+79E,0000006 8C
+   000185                    05 SQL-TIMESTAMP-1 PIC S9(9) COMP-5 VALUE +463836390.                 BLW=00000+7A6,000000E 4C
+   000186                    05 SQL-TIMESTAMP-2 PIC S9(9) COMP-5 VALUE +512087840.                 BLW=00000+7AA,0000012 4C
+   000187                    05 SQL-SECTION     PIC S9(4) COMP-5 VALUE +1.                         BLW=00000+7AE,0000016 2C
+   000188                    05 SQL-CODEPTR     PIC S9(9) COMP-5.                                  BLW=00000+7B0,0000018 4C
+   000189                    05 SQL-VPARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+7B4,000001C 4C
+   000190                    05 SQL-APARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+7B8,0000020 4C
+   000191                    05 FILLER          PIC S9(4) COMP-5 VALUE +1208.                      BLW=00000+7BC,0000024 2C
+   000192                    05 SQL-STMT-TYPE   PIC S9(4) COMP-5 VALUE +4.                         BLW=00000+7BE,0000026 2C
+   000193                    05 SQL-STMT-NUM    PIC S9(9) COMP-5 VALUE +156.                       BLW=00000+7C0,0000028 4C
+   000194                    05 SQL-PLIST-FLG   PIC S9(4) COMP-5 VALUE +0.                         BLW=00000+7C4,000002C 2C
+   000195                    05 FILLER          PIC X(18) VALUE                                    BLW=00000+7C6,000002E 18C
+   000196                       X'000000000000000000000000000000000000'.
+   000197                    05 SQL-AVAR-LIST4.                                                    BLW=00000+7D8,0000040 0CL60
+   000198                       10 PRE-SQLDAID  PIC X(8)  VALUE 'SQLDA  Ê'.                        BLW=00000+7D8,0000040 8C
+   000199                       10 PRE-SQLDABC  PIC S9(9) COMP-5 VALUE +60.                        BLW=00000+7E0,0000048 4C
+   000200                       10 PRE-SQLN     PIC S9(4) COMP-5 VALUE +1.                         BLW=00000+7E4,000004C 2C
+   000201                       10 PRE-SQLLD    PIC S9(4) COMP-5 VALUE +1.                         BLW=00000+7E6,000004E 2C
+   000202                       10 PRE-SQLVAR.                                                     BLW=00000+7E8,0000050 0CL44
+   000203                         12 SQLVAR-BASE1.                                                 BLW=00000+7E8,0000050 0CL44
+   000204                           15 SQL-AVAR-TYPE1      PIC S9(4) COMP-5 VALUE +484.            BLW=00000+7E8,0000050 2C
+   000205                           15 SQL-AVAR-LEN1       PIC S9(4) COMP-5 VALUE +3074.           BLW=00000+7EA,0000052 2C
+   000206                           15 SQL-AVAR-ADDRS1.                                            BLW=00000+7EC,0000054 0CL8
+   000207                              20 SQL-AVAR-ADDR1   PIC S9(9) COMP-5.                       BLW=00000+7EC,0000054 4C
+   000208                              20 SQL-AVAR-IND1    PIC S9(9) COMP-5.                       BLW=00000+7F0,0000058 4C
+   000209                           15 SQL-AVAR-NAME1.                                             BLW=00000+7F4,000005C 0CL32
+   000210                              20 SQL-AVAR-NAMEL1  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+7F4,000005C 2C
+   000211                              20 SQL-AVAR-NAMEC1  PIC X(30) VALUE ' '.                    BLW=00000+7F6,000005E 30C
+   000212                 01 SQL-PLIST5.                                                           BLW=00000+818         0CL212
+   000213                    05 SQL-PLIST-CON   PIC S9(9) COMP-5 VALUE +4210688.                   BLW=00000+818,0000000 4C
+   000214                    05 SQL-CALLTYPE    PIC S9(4) COMP-5 VALUE +30.                        BLW=00000+81C,0000004 2C
+   000215                    05 SQL-PROG-NAME   PIC X(8)  VALUE X'5452445042303033'.               BLW=00000+81E,0000006 8C
+   000216                    05 SQL-TIMESTAMP-1 PIC S9(9) COMP-5 VALUE +463836390.                 BLW=00000+826,000000E 4C
+   000217                    05 SQL-TIMESTAMP-2 PIC S9(9) COMP-5 VALUE +512087840.                 BLW=00000+82A,0000012 4C
+   000218                    05 SQL-SECTION     PIC S9(4) COMP-5 VALUE +2.                         BLW=00000+82E,0000016 2C
+   000219                    05 SQL-CODEPTR     PIC S9(9) COMP-5.                                  BLW=00000+830,0000018 4C
+   000220                    05 SQL-VPARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+834,000001C 4C
+   000221                    05 SQL-APARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+838,0000020 4C
+   000222                    05 FILLER          PIC S9(4) COMP-5 VALUE +1208.                      BLW=00000+83C,0000024 2C
+   000223                    05 SQL-STMT-TYPE   PIC S9(4) COMP-5 VALUE +234.                       BLW=00000+83E,0000026 2C
+   000224                    05 SQL-STMT-NUM    PIC S9(9) COMP-5 VALUE +167.                       BLW=00000+840,0000028 4C
+   000225                    05 SQL-PLIST-FLG   PIC S9(4) COMP-5 VALUE +0.                         BLW=00000+844,000002C 2C
+   000226                    05 FILLER          PIC X(18) VALUE                                    BLW=00000+846,000002E 18C
+   000227                       X'000000000000000000000000000000000000'.
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     8
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000228                    05 SQL-PVAR-LIST5.                                                    BLW=00000+858,0000040 0CL148
+   000229                       10 PRE-SQLDAID  PIC X(8)  VALUE 'SQLDA  Ê'.                        BLW=00000+858,0000040 8C
+   000230                       10 PRE-SQLDABC  PIC S9(9) COMP-5 VALUE +148.                       BLW=00000+860,0000048 4C
+   000231                       10 PRE-SQLN     PIC S9(4) COMP-5 VALUE +3.                         BLW=00000+864,000004C 2C
+   000232                       10 PRE-SQLLD    PIC S9(4) COMP-5 VALUE +3.                         BLW=00000+866,000004E 2C
+   000233                       10 PRE-SQLVAR.                                                     BLW=00000+868,0000050 0CL132
+   000234                         12 SQLVAR-BASE1.                                                 BLW=00000+868,0000050 0CL44
+   000235                           15 SQL-PVAR-TYPE1      PIC S9(4) COMP-5 VALUE +484.            BLW=00000+868,0000050 2C
+   000236                           15 SQL-PVAR-LEN1       PIC S9(4) COMP-5 VALUE +3074.           BLW=00000+86A,0000052 2C
+   000237                           15 SQL-PVAR-ADDRS1.                                            BLW=00000+86C,0000054 0CL8
+   000238                              20 SQL-PVAR-ADDR1   PIC S9(9) COMP-5.                       BLW=00000+86C,0000054 4C
+   000239                              20 SQL-PVAR-IND1    PIC S9(9) COMP-5.                       BLW=00000+870,0000058 4C
+   000240                           15 SQL-PVAR-NAME1.                                             BLW=00000+874,000005C 0CL32
+   000241                              20 SQL-PVAR-NAMEL1  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+874,000005C 2C
+   000242                              20 SQL-PVAR-NAMEC1  PIC X(30) VALUE ' '.                    BLW=00000+876,000005E 30C
+   000243                         12 SQLVAR-BASE2.                                                 BLW=00000+894,000007C 0CL44
+   000244                           15 SQL-PVAR-TYPE2      PIC S9(4) COMP-5 VALUE +452.            BLW=00000+894,000007C 2C
+   000245                           15 SQL-PVAR-LEN2       PIC S9(4) COMP-5 VALUE +3.              BLW=00000+896,000007E 2C
+   000246                           15 SQL-PVAR-ADDRS2.                                            BLW=00000+898,0000080 0CL8
+   000247                              20 SQL-PVAR-ADDR2   PIC S9(9) COMP-5.                       BLW=00000+898,0000080 4C
+   000248                              20 SQL-PVAR-IND2    PIC S9(9) COMP-5.                       BLW=00000+89C,0000084 4C
+   000249                           15 SQL-PVAR-NAME2.                                             BLW=00000+8A0,0000088 0CL32
+   000250                              20 SQL-PVAR-NAMEL2  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+8A0,0000088 2C
+   000251                              20 SQL-PVAR-NAMEC2  PIC X(30) VALUE ' '.                    BLW=00000+8A2,000008A 30C
+   000252                         12 SQLVAR-BASE3.                                                 BLW=00000+8C0,00000A8 0CL44
+   000253                           15 SQL-PVAR-TYPE3      PIC S9(4) COMP-5 VALUE +496.            BLW=00000+8C0,00000A8 2C
+   000254                           15 SQL-PVAR-LEN3       PIC S9(4) COMP-5 VALUE +4.              BLW=00000+8C2,00000AA 2C
+   000255                           15 SQL-PVAR-ADDRS3.                                            BLW=00000+8C4,00000AC 0CL8
+   000256                              20 SQL-PVAR-ADDR3   PIC S9(9) COMP-5.                       BLW=00000+8C4,00000AC 4C
+   000257                              20 SQL-PVAR-IND3    PIC S9(9) COMP-5.                       BLW=00000+8C8,00000B0 4C
+   000258                           15 SQL-PVAR-NAME3.                                             BLW=00000+8CC,00000B4 0CL32
+   000259                              20 SQL-PVAR-NAMEL3  PIC S9(4) COMP-5 VALUE +0.              BLW=00000+8CC,00000B4 2C
+   000260                              20 SQL-PVAR-NAMEC3  PIC X(30) VALUE ' '.                    BLW=00000+8CE,00000B6 30C
+   000261                 01 SQL-PLIST6.                                                           BLW=00000+8F0         0CL64
+   000262                    05 SQL-PLIST-CON   PIC S9(9) COMP-5 VALUE +4194304.                   BLW=00000+8F0,0000000 4C
+   000263                    05 SQL-CALLTYPE    PIC S9(4) COMP-5 VALUE +45.                        BLW=00000+8F4,0000004 2C
+   000264                    05 SQL-PROG-NAME   PIC X(8)  VALUE X'5452445042303033'.               BLW=00000+8F6,0000006 8C
+   000265                    05 SQL-TIMESTAMP-1 PIC S9(9) COMP-5 VALUE +463836390.                 BLW=00000+8FE,000000E 4C
+   000266                    05 SQL-TIMESTAMP-2 PIC S9(9) COMP-5 VALUE +512087840.                 BLW=00000+902,0000012 4C
+   000267                    05 SQL-SECTION     PIC S9(4) COMP-5 VALUE +1.                         BLW=00000+906,0000016 2C
+   000268                    05 SQL-CODEPTR     PIC S9(9) COMP-5.                                  BLW=00000+908,0000018 4C
+   000269                    05 SQL-VPARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+90C,000001C 4C
+   000270                    05 SQL-APARMPTR    PIC S9(9) COMP-5 VALUE +0.                         BLW=00000+910,0000020 4C
+   000271                    05 FILLER          PIC S9(4) COMP-5 VALUE +1208.                      BLW=00000+914,0000024 2C
+   000272                    05 SQL-STMT-TYPE   PIC S9(4) COMP-5 VALUE +5.                         BLW=00000+916,0000026 2C
+   000273                    05 SQL-STMT-NUM    PIC S9(9) COMP-5 VALUE +205.                       BLW=00000+918,0000028 4C
+   000274                    05 SQL-PLIST-FLG   PIC S9(4) COMP-5 VALUE +0.                         BLW=00000+91C,000002C 2C
+   000275                    05 FILLER          PIC X(18) VALUE                                    BLW=00000+91E,000002E 18C
+   000276                       X'000000000000000000000000000000000000'.
+   000277
+   000278         005670 LINKAGE SECTION.                                                 00567000
+   000279         005680 COPY TRDORDER.                                                   00568000
+   000280C        009700 01 TRD-ORDER-PAIR.                                               00970000 BLL=00001+000         0CL88
+   000281C        009800    05 TRD-EXCHANGE              PIC X(10).                       00980000 BLL=00001+000,0000000 10C
+   000282C        009900    05 TRD-BUYER-ID              PIC X(12).                       00990000 BLL=00001+00A,000000A 12C
+   000283C        010000    05 TRD-SELLER-ID             PIC X(12).                       01000000 BLL=00001+016,0000016 12C
+   000284C        010100    05 TRD-ORDER-ID              PIC X(12).                       01010000 BLL=00001+022,0000022 12C
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page     9
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000285C        010200    05 TRD-FIGI                  PIC X(12).                       01020000 BLL=00001+02E,000002E 12C
+   000286C        010300    05 TRD-ORDER-QTY             PIC S9(7)V9(2) USAGE COMP-3.     01030000 BLL=00001+03A,000003A 5P
+   000287C        010400    05 TRD-CURRENCY              PIC X(03).                       01040000 BLL=00001+03F,000003F 3C
+   000288C        010500    05 TRD-ORDER-AMOUNT          PIC S9(7)V9(2) USAGE COMP-3.     01050000 BLL=00001+042,0000042 5P
+   000289C        010600    05 TRD-BUYER-SEC-ACC-NUM     PIC S9(9) USAGE COMP.            01060000 BLL=00001+047,0000047 4C
+   000290C        010700    05 TRD-BUYER-MONEY-ACC-NUM   PIC S9(9) USAGE COMP.            01070000 BLL=00001+04B,000004B 4C
+   000291C        010800    05 TRD-SELLER-SEC-ACC-NUM    PIC S9(9) USAGE COMP.            01080000 BLL=00001+04F,000004F 4C
+   000292C        010900    05 TRD-SELLER-MONEY-ACC-NUM  PIC S9(9) USAGE COMP.            01090000 BLL=00001+053,0000053 4C
+   000293C        011000    05 TRD-STATUS                PIC X.                           01100001 BLL=00001+057,0000057 1C
+   000294C        011100       88 TRD-ACCEPTED           VALUE 'A'.                       01110002
+   000295C        011200       88 TRD-SAC-BOOKING-DONE   VALUE 'S'.                       01120002
+   000296C        011300       88 TRD-SAC-BOOKING-FAILED VALUE 'F'.                       01130002
+   000297C        011400       88 TRD-MAC-BOOKING-DONE   VALUE 'M'.                       01140002
+   000298C        011500       88 TRD-MAC-BOOKING-FAILED VALUE 'N'.                       01150002
+   000299**       005690*                                                                 00569000
+   000300         005700 PROCEDURE DIVISION USING TRD-ORDER-PAIR.                         00570005 280
+   000301         005800                                                                  00580000
+   000302                DSNSQL SECTION.
+   000303                SQL-SKIP.
+   000304                    GO TO SQL-INIT-END.                                                   325
+   000305                SQL-INITIAL.
+   000306                    MOVE 1 TO SQL-INIT-FLAG.                                              135
+   000307                    CALL 'DSNHADDR' USING SQL-VPARMPTR OF SQL-PLIST3 SQL-PVAR-LIS         EXT 149 141 157
+   000308               -    T3.
+   000309                    CALL 'DSNHADD2' USING SQL-PVAR-ADDRS1 IN                              EXT 166
+   000310                    SQL-PVAR-LIST3 MAC-CURRENCY OF DCLTBTRDMAC SQL-NULL MAC-NUMBE         157 100 99 134 101
+   000311               -    R OF DCLTBTRDMAC SQL-NULL                                             99 134
+   000312                    CALL 'DSNHADDR' USING SQL-CODEPTR OF SQL-PLIST3 SQLCA.                EXT 148 141 52
+   000313                    CALL 'DSNHADDR' USING SQL-APARMPTR OF SQL-PLIST4 SQL-AVAR-LIS         EXT 190 181 197
+   000314               -    T4.
+   000315                    CALL 'DSNHADD2' USING SQL-AVAR-ADDRS1 IN                              EXT 206
+   000316                    SQL-AVAR-LIST4 MAC-BALANCE OF DCLTBTRDMAC SQL-NULL.                   197 103 99 134
+   000317                    CALL 'DSNHADDR' USING SQL-CODEPTR OF SQL-PLIST4 SQLCA.                EXT 188 181 52
+   000318                    CALL 'DSNHADDR' USING SQL-VPARMPTR OF SQL-PLIST5 SQL-PVAR-LIS         EXT 220 212 228
+   000319               -    T5.
+   000320                    CALL 'DSNHADD2' USING SQL-PVAR-ADDRS1 IN                              EXT 237
+   000321                    SQL-PVAR-LIST5 MAC-BALANCE OF DCLTBTRDMAC SQL-NULL MAC-CURREN         228 103 99 134 100
+   000322               -    CY OF DCLTBTRDMAC SQL-NULL MAC-NUMBER OF DCLTBTRDMAC SQL-NULL         99 134 101 99 134
+   000323                    CALL 'DSNHADDR' USING SQL-CODEPTR OF SQL-PLIST5 SQLCA.                EXT 219 212 52
+   000324                    CALL 'DSNHADDR' USING SQL-CODEPTR OF SQL-PLIST6 SQLCA.                EXT 268 261 52
+   000325                SQL-INIT-END.
+   000326                    CONTINUE.
+   000327
+   000328         005900 0000-MAINLINE.                                                   00590000
+   000329         006000                                                                  00600000
+   000330         007800* Set default to Booking Failed                                   00780000
+   000331         007900     SET TRD-MAC-BOOKING-FAILED TO TRUE                           00790000 298
+   000332         008000                                                                  00800000
+   000333         008100     SET  DEBIT-BUYER TO TRUE                                     00810000 20
+   000334         008200     PERFORM 1000-MAC-BOOKING                                     00820000 348
+   000335         008300        THRU 1000-EXIT                                            00830000 444
+   000336         008400                                                                  00840000
+   000337         008500     IF TRD-MAC-BOOKING-DONE THEN                                 00850000 297
+   000338         008600* Reset back to Booking Failed and attempt Crediting Seller       00860000
+   000339      1  008700        SET TRD-MAC-BOOKING-FAILED TO TRUE                        00870000 298
+   000340      1  008711        SET  CREDIT-SELLER TO TRUE                                00871100 19
+   000341      1  008720        PERFORM 1000-MAC-BOOKING                                  00872000 348
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    10
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000342      1  008730           THRU 1000-EXIT                                         00873000 444
+   000343         008740     END-IF                                                       00874000
+   000344         008750                                                                  00875000
+   000345         008760     GOBACK                                                       00876005
+   000346         008790     .                                                            00879000
+   000347         008800*                                                                 00880000
+   000348         008900 1000-MAC-BOOKING.                                                00890000
+   000349         009000*                                                                 00900000
+   000350         009100     IF CREDIT-SELLER                                             00910000 19
+   000351      1  009200        MOVE TRD-CURRENCY             TO MAC-CURRENCY             00920000 287 100
+   000352      1  009300        MOVE TRD-SELLER-MONEY-ACC-NUM TO MAC-NUMBER               00930000 292 101
+   000353         009410     ELSE                                                         00941000
+   000354      1  009420        MOVE TRD-CURRENCY             TO MAC-CURRENCY             00942000 287 100
+   000355      1  009430        MOVE TRD-BUYER-MONEY-ACC-NUM  TO MAC-NUMBER               00943000 290 101
+   000356         009432     END-IF                                                       00943200
+   000357         009433*                                                                 00943300
+   000358         009434*****EXEC SQL                                                     00943400
+   000359         009435*****    OPEN MAC_BOOKING                                         00943500
+   000360               *****END-EXEC                                                     00943600
+   000361                    PERFORM SQL-INITIAL UNTIL SQL-INIT-DONE                               305 136
+   000362                    CALL 'DSNHLI' USING SQL-PLIST3                                        EXT 141
+   000363                    END-CALL
+   000364         009437*                                                                 00943700
+   000365         009438     IF SQLCODE NOT = 0 THEN                                      00943800 55
+   000366      1  009439        SET TRD-MAC-BOOKING-FAILED TO TRUE                        00943900 298
+   000367      1  009440        MOVE SQLCODE TO WS-SQLCODE                                00944000 55 16
+   000368      1  009450        SET DATA-EXCEPTION TO TRUE                                00945000 37
+   000369      1  009460        MOVE SPACES TO WS-EXCEPTION                               00946007 IMP 22
+   000370      1  009470        STRING                                                    00947000
+   000371      1  009480           'Open MAC_BOOKING Cursor failed : SQLCODE = '          00948000
+   000372      1  009490           WS-SQLCODE                                             00949000 16
+   000373      1  009500           DELIMITED BY SIZE                                      00950000
+   000374      1  009600          INTO WS-EXCEPTION                                       00960007 22
+   000375      1  009700        END-STRING                                                00970000
+   000376      1  009800        PERFORM 9000-REPORT-EXCEPTION                             00980000 450
+   000377      1  009810           THRU 9000-EXIT                                         00981004 474
+   000378      1  009900        GO TO 1000-EXIT                                           00990000 444
+   000379         010000     END-IF                                                       01000000
+   000380         010100*                                                                 01010000
+   000381         010200*****EXEC SQL                                                     01020000
+   000382         010300*****    FETCH MAC_BOOKING                                        01030000
+   000383         010400*****     INTO :MAC-BALANCE                                       01040000
+   000384               *****END-EXEC                                                     01050000
+   000385                    PERFORM SQL-INITIAL UNTIL SQL-INIT-DONE                               305 136
+   000386                    CALL 'DSNHLI' USING SQL-PLIST4                                        EXT 181
+   000387                    END-CALL
+   000388         010600*                                                                 01060000
+   000389         010700     IF SQLCODE = 0 THEN                                          01070000 55
+   000390      1  010800        IF CREDIT-SELLER                                          01080000 19
+   000391      2  010900           COMPUTE MAC-BALANCE = MAC-BALANCE + TRD-ORDER-AMOUNT   01090000 103 103 288
+   000392      1  011000        ELSE                                                      01100000
+   000393      2  011100           COMPUTE MAC-BALANCE = MAC-BALANCE - TRD-ORDER-AMOUNT   01110000 103 103 288
+   000394      1  011200        END-IF                                                    01120000
+   000395         011300*****   EXEC SQL                                                  01130000
+   000396         011400*****        UPDATE TBTRDMAC                                      01140000
+   000397         011500*****          SET MAC_BALANCE      = :MAC-BALANCE                01150000
+   000398         011600*****        WHERE MAC_CURRENCY     = :MAC-CURRENCY               01160009
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    11
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000399         011610*****          AND MAC_NUMBER       = :MAC-NUMBER                 01161009
+   000400               *****   END-EXEC                                                  01170000
+   000401      1             PERFORM SQL-INITIAL UNTIL SQL-INIT-DONE                               305 136
+   000402      1             CALL 'DSNHLI' USING SQL-PLIST5                                        EXT 212
+   000403      1             END-CALL
+   000404         011710*            WHERE CURRENT OF MAC_BOOKING                         01171008
+   000405      1  011800        IF SQLCODE = 0 THEN                                       01180000 55
+   000406      2  011900           SET TRD-MAC-BOOKING-DONE TO TRUE                       01190000 297
+   000407      1  012000        ELSE                                                      01200000
+   000408      2  012100           SET TRD-MAC-BOOKING-FAILED TO TRUE                     01210000 298
+   000409      2  012200           MOVE SQLCODE TO WS-SQLCODE                             01220000 55 16
+   000410      2  012300           SET DATA-EXCEPTION TO TRUE                             01230000 37
+   000411      2  012400           MOVE SPACES TO WS-EXCEPTION                            01240007 IMP 22
+   000412      2  012410           STRING                                                 01241000
+   000413      2  012420              'Update using MAC_BOOKING Cursor failed : '         01242000
+   000414      2  012430              'SQLCODE = '                                        01243000
+   000415      2  012431              WS-SQLCODE                                          01243100 16
+   000416      2  012432              DELIMITED BY SIZE                                   01243200
+   000417      2  012433             INTO WS-EXCEPTION                                    01243307 22
+   000418      2  012434           END-STRING                                             01243400
+   000419      2  012435           PERFORM 9000-REPORT-EXCEPTION                          01243500 450
+   000420      2  012436              THRU 9000-EXIT                                      01243604 474
+   000421      1  012437        END-IF                                                    01243700
+   000422         012438     ELSE                                                         01243800
+   000423      1  012439        SET TRD-MAC-BOOKING-FAILED TO TRUE                        01243900 298
+   000424      1  012440        MOVE SQLCODE TO WS-SQLCODE                                01244000 55 16
+   000425      1  012441        SET DATA-EXCEPTION TO TRUE                                01244100 37
+   000426      1  012450        MOVE SPACES TO WS-EXCEPTION                               01245007 IMP 22
+   000427      1  012460        STRING                                                    01246000
+   000428      1  012470           'Fetch MAC_BOOKING Cursor failed : SQLCODE = '         01247000
+   000429      1  012480           WS-SQLCODE                                             01248000 16
+   000430      1  012490           DELIMITED BY SIZE                                      01249000
+   000431      1  012500          INTO WS-EXCEPTION                                       01250007 22
+   000432      1  012600        END-STRING                                                01260000
+   000433      1  012700        PERFORM 9000-REPORT-EXCEPTION                             01270000 450
+   000434      1  012710           THRU 9000-EXIT                                         01271004 474
+   000435         012800     END-IF                                                       01280000
+   000436         012810*****EXEC SQL                                                     01281003
+   000437         012820*****    CLOSE MAC_BOOKING                                        01282003
+   000438               *****END-EXEC                                                     01283003
+   000439                    PERFORM SQL-INITIAL UNTIL SQL-INIT-DONE                               305 136
+   000440                    CALL 'DSNHLI' USING SQL-PLIST6                                        EXT 261
+   000441                    END-CALL
+   000442         012900     .                                                            01290000
+   000443         013000*                                                                 01300000
+   000444         013100 1000-EXIT.                                                       01310000
+   000445         013200     EXIT.                                                        01320000
+   000446         015300*                                                                 01530000
+   000447         015400*****EXEC SQL                                                     01540000
+   000448         015500*****    INCLUDE EXCPCOPY                                         01550000
+   000449               *****END-EXEC.                                                    01560000
+   000450         100200 9000-REPORT-EXCEPTION.                                           10020000
+   000451         100300*                                                                 10030000
+   000452         100301*    EXEC SQL                                                     10030115
+   000453         100302*        SET :EXCEPTION-TIMESTAMP = CURRENT_TIMESTAMP             10030215
+   000454         100303*    END-EXEC                                                     10030315
+   000455         100304     MOVE WS-EXCEPTION  TO EXCEPTION-DESC                         10030413 22 47
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    12
+   LineID  PL SL  ----+-*A-1-B--+----2----+----3----+----4----+----5----+----6----+----7-|--+----8 Map and Cross Reference
+0  000456         100305     MOVE LENGTH OF WS-EXCEPTION                                  10030513 IMP 22
+   000457         100306       TO EXCEPTION-RECORD-LEN                                    10030613 39
+   000458         100327     EVALUATE TRUE                                                10032700
+   000459         100328        WHEN SYSTEM-EXCEPTION                                     10032800 35
+   000460      1  100329             MOVE 'SYSTEM'             TO EXCEPTION-TYPE          10032903 43
+   000461         100333        WHEN APPL-EXCEPTION                                       10033300 36
+   000462      1  100334             MOVE 'APPLICATION'        TO EXCEPTION-TYPE          10033403 43
+   000463         100360        WHEN DATA-EXCEPTION                                       10036003 37
+   000464      1  100370             MOVE 'DATA'               TO EXCEPTION-TYPE          10037005 43
+   000465         100380     END-EVALUATE                                                 10038000
+   000466         100390     ADD 46 TO EXCEPTION-RECORD-LEN                               10039004 39
+   000467         100400*                                                                 10040000
+   000468         100401     CALL WS-EXCEPTION-HANDLER                                    10040110 27
+   000469         100402          USING EXCEPTION-RECORD-LEN                              10040211 39
+   000470         100403              , EXCEPTION-RECORD                                  10040314 41
+   000471         100412*                                                                 10041203
+   000472         100413     CONTINUE.                                                    10041312
+   000473         100440*                                                                 10044000
+   000474         100500 9000-EXIT.                                                       10050002
+   000475         100600*                                                                 10060000
+   000476         100700     EXIT.                                                        10070000
+ */ TRDPB002
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    13
+0An "M" preceding a data-name reference indicates that the data-name is modified by this reference.
+
+  Defined   Cross-reference of data names   References
+
+       36   APPL-EXCEPTION . . . . . . . .  461
+       19   CREDIT-SELLER. . . . . . . . .  M340 350 390
+       37   DATA-EXCEPTION . . . . . . . .  M368 M410 M425 463
+       99   DCLTBTRDMAC. . . . . . . . . .  310 311 316 321 322 322
+       20   DEBIT-BUYER. . . . . . . . . .  M333
+      129   DSN-TEMP
+      130   DSN-TMP2
+      133   DSNNLEN
+      131   DSNNROWS
+      132   DSNNTYPE
+       45   EXCEPTION-APPLICATION
+       46   EXCEPTION-DATA
+       47   EXCEPTION-DESC . . . . . . . .  M455
+       41   EXCEPTION-RECORD . . . . . . .  470
+       39   EXCEPTION-RECORD-LEN . . . . .  M457 M466 469
+       44   EXCEPTION-SYSTEM
+       43   EXCEPTION-TYPE . . . . . . . .  M460 M462 M464
+      109   INDSTRUC
+      108   ITBTRDMAC
+      103   MAC-BALANCE. . . . . . . . . .  316 321 M391 391 M393 393
+      100   MAC-CURRENCY . . . . . . . . .  310 321 M351 M354
+      102   MAC-CUSTOMER-ID
+      101   MAC-NUMBER . . . . . . . . . .  310 322 M352 M355
+      104   MAC-STATUS
+       34   NO-EXCEPTIONS
+      159   PRE-SQLDABC
+      199   PRE-SQLDABC
+      230   PRE-SQLDABC
+      158   PRE-SQLDAID
+      198   PRE-SQLDAID
+      229   PRE-SQLDAID
+      161   PRE-SQLLD
+      201   PRE-SQLLD
+      232   PRE-SQLLD
+      160   PRE-SQLN
+      200   PRE-SQLN
+      231   PRE-SQLN
+      162   PRE-SQLVAR
+      202   PRE-SQLVAR
+      233   PRE-SQLVAR
+      150   SQL-APARMPTR
+      190   SQL-APARMPTR . . . . . . . . .  313
+      221   SQL-APARMPTR
+      270   SQL-APARMPTR
+      206   SQL-AVAR-ADDRS1. . . . . . . .  315
+      207   SQL-AVAR-ADDR1
+      208   SQL-AVAR-IND1
+      205   SQL-AVAR-LEN1
+      197   SQL-AVAR-LIST4 . . . . . . . .  313 316
+      211   SQL-AVAR-NAMEC1
+      210   SQL-AVAR-NAMEL1
+      209   SQL-AVAR-NAME1
+      204   SQL-AVAR-TYPE1
+      143   SQL-CALLTYPE
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    14
+0 Defined   Cross-reference of data names   References
+
+0     183   SQL-CALLTYPE
+      214   SQL-CALLTYPE
+      263   SQL-CALLTYPE
+      148   SQL-CODEPTR. . . . . . . . . .  312
+      188   SQL-CODEPTR. . . . . . . . . .  317
+      219   SQL-CODEPTR. . . . . . . . . .  323
+      268   SQL-CODEPTR. . . . . . . . . .  324
+      140   SQL-FILE-APPEND
+      138   SQL-FILE-CREATE
+      139   SQL-FILE-OVERWRITE
+      137   SQL-FILE-READ
+      136   SQL-INIT-DONE. . . . . . . . .  361 385 401 439
+      135   SQL-INIT-FLAG. . . . . . . . .  M306
+      134   SQL-NULL . . . . . . . . . . .  310 311 316 321 322 322
+      142   SQL-PLIST-CON
+      182   SQL-PLIST-CON
+      213   SQL-PLIST-CON
+      262   SQL-PLIST-CON
+      154   SQL-PLIST-FLG
+      194   SQL-PLIST-FLG
+      225   SQL-PLIST-FLG
+      274   SQL-PLIST-FLG
+      141   SQL-PLIST3 . . . . . . . . . .  307 312 362
+      181   SQL-PLIST4 . . . . . . . . . .  313 317 386
+      212   SQL-PLIST5 . . . . . . . . . .  318 323 402
+      261   SQL-PLIST6 . . . . . . . . . .  324 440
+      144   SQL-PROG-NAME
+      184   SQL-PROG-NAME
+      215   SQL-PROG-NAME
+      264   SQL-PROG-NAME
+      166   SQL-PVAR-ADDRS1. . . . . . . .  309
+      237   SQL-PVAR-ADDRS1. . . . . . . .  320
+      175   SQL-PVAR-ADDRS2
+      246   SQL-PVAR-ADDRS2
+      255   SQL-PVAR-ADDRS3
+      167   SQL-PVAR-ADDR1
+      238   SQL-PVAR-ADDR1
+      176   SQL-PVAR-ADDR2
+      247   SQL-PVAR-ADDR2
+      256   SQL-PVAR-ADDR3
+      168   SQL-PVAR-IND1
+      239   SQL-PVAR-IND1
+      177   SQL-PVAR-IND2
+      248   SQL-PVAR-IND2
+      257   SQL-PVAR-IND3
+      165   SQL-PVAR-LEN1
+      236   SQL-PVAR-LEN1
+      174   SQL-PVAR-LEN2
+      245   SQL-PVAR-LEN2
+      254   SQL-PVAR-LEN3
+      157   SQL-PVAR-LIST3 . . . . . . . .  307 310
+      228   SQL-PVAR-LIST5 . . . . . . . .  318 321
+      171   SQL-PVAR-NAMEC1
+      242   SQL-PVAR-NAMEC1
+      180   SQL-PVAR-NAMEC2
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    15
+0 Defined   Cross-reference of data names   References
+
+0     251   SQL-PVAR-NAMEC2
+      260   SQL-PVAR-NAMEC3
+      170   SQL-PVAR-NAMEL1
+      241   SQL-PVAR-NAMEL1
+      179   SQL-PVAR-NAMEL2
+      250   SQL-PVAR-NAMEL2
+      259   SQL-PVAR-NAMEL3
+      169   SQL-PVAR-NAME1
+      240   SQL-PVAR-NAME1
+      178   SQL-PVAR-NAME2
+      249   SQL-PVAR-NAME2
+      258   SQL-PVAR-NAME3
+      164   SQL-PVAR-TYPE1
+      235   SQL-PVAR-TYPE1
+      173   SQL-PVAR-TYPE2
+      244   SQL-PVAR-TYPE2
+      253   SQL-PVAR-TYPE3
+      147   SQL-SECTION
+      187   SQL-SECTION
+      218   SQL-SECTION
+      267   SQL-SECTION
+      153   SQL-STMT-NUM
+      193   SQL-STMT-NUM
+      224   SQL-STMT-NUM
+      273   SQL-STMT-NUM
+      152   SQL-STMT-TYPE
+      192   SQL-STMT-TYPE
+      223   SQL-STMT-TYPE
+      272   SQL-STMT-TYPE
+      128   SQL-TEMP
+      145   SQL-TIMESTAMP-1
+      185   SQL-TIMESTAMP-1
+      216   SQL-TIMESTAMP-1
+      265   SQL-TIMESTAMP-1
+      146   SQL-TIMESTAMP-2
+      186   SQL-TIMESTAMP-2
+      217   SQL-TIMESTAMP-2
+      266   SQL-TIMESTAMP-2
+      124   SQL-VERS
+      126   SQL-VERS-DATA
+      125   SQL-VERS-PREF
+      149   SQL-VPARMPTR . . . . . . . . .  307
+      189   SQL-VPARMPTR
+      220   SQL-VPARMPTR . . . . . . . . .  318
+      269   SQL-VPARMPTR
+       52   SQLCA. . . . . . . . . . . . .  312 317 323 324
+       54   SQLCABC
+       53   SQLCAID
+       55   SQLCODE. . . . . . . . . . . .  365 367 389 405 409 424
+       60   SQLERRD
+       56   SQLERRM
+       58   SQLERRMC
+       57   SQLERRML
+       59   SQLERRP
+       71   SQLEXT
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    16
+0 Defined   Cross-reference of data names   References
+
+0      75   SQLSTATE
+      163   SQLVAR-BASE1
+      203   SQLVAR-BASE1
+      234   SQLVAR-BASE1
+      172   SQLVAR-BASE2
+      243   SQLVAR-BASE2
+      252   SQLVAR-BASE3
+       62   SQLWARN
+       74   SQLWARNA
+       63   SQLWARN0
+       64   SQLWARN1
+       65   SQLWARN2
+       66   SQLWARN3
+       67   SQLWARN4
+       68   SQLWARN5
+       69   SQLWARN6
+       70   SQLWARN7
+       72   SQLWARN8
+       73   SQLWARN9
+       35   SYSTEM-EXCEPTION . . . . . . .  459
+      294   TRD-ACCEPTED
+      282   TRD-BUYER-ID
+      290   TRD-BUYER-MONEY-ACC-NUM. . . .  355
+      289   TRD-BUYER-SEC-ACC-NUM
+      287   TRD-CURRENCY . . . . . . . . .  351 354
+      281   TRD-EXCHANGE
+      285   TRD-FIGI
+      297   TRD-MAC-BOOKING-DONE . . . . .  337 M406
+      298   TRD-MAC-BOOKING-FAILED . . . .  M331 M339 M366 M408 M423
+      288   TRD-ORDER-AMOUNT . . . . . . .  391 393
+      284   TRD-ORDER-ID
+      280   TRD-ORDER-PAIR . . . . . . . .  300
+      286   TRD-ORDER-QTY
+      295   TRD-SAC-BOOKING-DONE
+      296   TRD-SAC-BOOKING-FAILED
+      283   TRD-SELLER-ID
+      292   TRD-SELLER-MONEY-ACC-NUM . . .  352
+      291   TRD-SELLER-SEC-ACC-NUM
+      293   TRD-STATUS
+       18   WS-CR-DB-SWTICH
+       30   WS-CURRDATE
+       31   WS-CURRTIME
+       29   WS-DATE-TIME-VARS
+       22   WS-EXCEPTION . . . . . . . . .  M369 M374 M411 M417 M426 M431 455 456
+       27   WS-EXCEPTION-HANDLER . . . . .  468
+       33   WS-EXCP-TYPE
+       21   WS-PROG-ERROR-MSGS
+       16   WS-SQLCODE . . . . . . . . . .  M367 372 M409 415 M424 429
+       17   WS-SWITCHES
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    17
+0Context usage is indicated by the letter preceding a procedure-name reference.
+ These letters and their meanings are:
+     A = ALTER (procedure-name)
+     D = GO TO (procedure-name) DEPENDING ON
+     E = End of range of (PERFORM) through (procedure-name)
+     G = GO TO (procedure-name)
+     P = PERFORM (procedure-name)
+     T = (ALTER) TO PROCEED TO (procedure-name)
+     U = USE FOR DEBUGGING (procedure-name)
+
+  Defined   Cross-reference of procedures   References
+
+      302   DSNSQL
+      325   SQL-INIT-END . . . . . . . . .  G304
+      305   SQL-INITIAL. . . . . . . . . .  P361 P385 P401 P439
+      303   SQL-SKIP
+      328   0000-MAINLINE
+      444   1000-EXIT. . . . . . . . . . .  E335 E342 G378
+      348   1000-MAC-BOOKING . . . . . . .  P334 P341
+      474   9000-EXIT. . . . . . . . . . .  E377 E420 E434
+      450   9000-REPORT-EXCEPTION. . . . .  P376 P419 P433
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    18
+0 Defined   Cross-reference of programs     References
+
+ EXTERNAL   DSNHADDR . . . . . . . . . . .  307 312 313 317 318 323 324
+ EXTERNAL   DSNHADD2 . . . . . . . . . . .  309 315 320
+ EXTERNAL   DSNHLI . . . . . . . . . . . .  362 386 402 440
+        2   TRDPB002
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    19
+0
+          COPY/BASIS cross-reference of text-names, library names and dataset information
+
+  Text-name Library   File name                                    Concat   ISPF statistics
+  (Member)  (DDNAME)  (Dataset name)                               Level    Created         Changed
+
+  TRDORDER  SYSLIB    CLOUDFRM.TRADING.BATCHDB2.COBCOPY#             0
+
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    20
+0Data Division Map
+0Data Definition Attribute codes (rightmost column) have the following meanings:
+     D = Object of OCCURS DEPENDING    G = GLOBAL                             S = Spanned file
+     E = EXTERNAL                      O = Has OCCURS clause                  U = Undefined format file
+     F = Fixed-length file             OG= Group has own length definition    V = Variable-length file
+     FB= Fixed-length blocked file     R = REDEFINES                          VB= Variable-length blocked file
+0Source   Hierarchy and                                    Base       Hex-Displacement  Asmblr Data                    Data Def
+ LineID   Data Name                                        Locator    Blk   Structure   Definition      Data Type      Attributes
+      2  PROGRAM-ID TRDPB002----------------------------------------------------------------------------------------------------*
+     16   1  WS-SQLCODE. . . . . . . . . . . . . . . . . . BLW=00000  000               DS 4C           Disp-Num-Edit
+     17   1  WS-SWITCHES . . . . . . . . . . . . . . . . . BLW=00000  008               DS 0CL1         Group
+     18     2  WS-CR-DB-SWTICH . . . . . . . . . . . . . . BLW=00000  008   0 000 000   DS 1C           Display
+     19     88 CREDIT-SELLER . . . . . . . . . . . . . . .
+     20     88 DEBIT-BUYER . . . . . . . . . . . . . . . .
+     21   1  WS-PROG-ERROR-MSGS. . . . . . . . . . . . . . BLW=00000  010               DS 0CL200       Group
+     22     2  WS-EXCEPTION. . . . . . . . . . . . . . . . BLW=00000  010   0 000 000   DS 200C         Display
+     27   1  WS-EXCEPTION-HANDLER. . . . . . . . . . . . . BLW=00000  0D8               DS 16C          Display
+     29   1  WS-DATE-TIME-VARS . . . . . . . . . . . . . . BLW=00000  0E8               DS 0CL18        Group
+     30     2  WS-CURRDATE . . . . . . . . . . . . . . . . BLW=00000  0E8   0 000 000   DS 10C          Display
+     31     2  WS-CURRTIME . . . . . . . . . . . . . . . . BLW=00000  0F2   0 000 00A   DS 8C           Display
+     33   1  WS-EXCP-TYPE. . . . . . . . . . . . . . . . . BLW=00000  100               DS 1C           Display
+     34   88 NO-EXCEPTIONS . . . . . . . . . . . . . . . .
+     35   88 SYSTEM-EXCEPTION. . . . . . . . . . . . . . .
+     36   88 APPL-EXCEPTION. . . . . . . . . . . . . . . .
+     37   88 DATA-EXCEPTION. . . . . . . . . . . . . . . .
+     39   1  EXCEPTION-RECORD-LEN. . . . . . . . . . . . . BLW=00000  108               DS 2C           Binary
+     41   1  EXCEPTION-RECORD. . . . . . . . . . . . . . . BLW=00000  110               DS 0CL1020      Group
+     43     2  EXCEPTION-TYPE. . . . . . . . . . . . . . . BLW=00000  110   0 000 000   DS 20C          Display
+     44     88 EXCEPTION-SYSTEM. . . . . . . . . . . . . .
+     45     88 EXCEPTION-APPLICATION . . . . . . . . . . .
+     46     88 EXCEPTION-DATA. . . . . . . . . . . . . . .
+     47     2  EXCEPTION-DESC. . . . . . . . . . . . . . . BLW=00000  124   0 000 014   DS 1000C        Display
+     52   1  SQLCA . . . . . . . . . . . . . . . . . . . . BLW=00000  510               DS 0CL136       Group
+     53     2  SQLCAID . . . . . . . . . . . . . . . . . . BLW=00000  510   0 000 000   DS 8C           Display
+     54     2  SQLCABC . . . . . . . . . . . . . . . . . . BLW=00000  518   0 000 008   DS 4C           Binary
+     55     2  SQLCODE . . . . . . . . . . . . . . . . . . BLW=00000  51C   0 000 00C   DS 4C           Binary
+     56     2  SQLERRM . . . . . . . . . . . . . . . . . . BLW=00000  520   0 000 010   DS 0CL72        Group
+     57       3  SQLERRML. . . . . . . . . . . . . . . . . BLW=00000  520   0 000 010   DS 2C           Binary
+     58       3  SQLERRMC. . . . . . . . . . . . . . . . . BLW=00000  522   0 000 012   DS 70C          Display
+     59     2  SQLERRP . . . . . . . . . . . . . . . . . . BLW=00000  568   0 000 058   DS 8C           Display
+     60     2  SQLERRD . . . . . . . . . . . . . . . . . . BLW=00000  570   0 000 060   DS 4C           Binary         O
+     62     2  SQLWARN . . . . . . . . . . . . . . . . . . BLW=00000  588   0 000 078   DS 0CL8         Group
+     63       3  SQLWARN0. . . . . . . . . . . . . . . . . BLW=00000  588   0 000 078   DS 1C           Display
+     64       3  SQLWARN1. . . . . . . . . . . . . . . . . BLW=00000  589   0 000 079   DS 1C           Display
+     65       3  SQLWARN2. . . . . . . . . . . . . . . . . BLW=00000  58A   0 000 07A   DS 1C           Display
+     66       3  SQLWARN3. . . . . . . . . . . . . . . . . BLW=00000  58B   0 000 07B   DS 1C           Display
+     67       3  SQLWARN4. . . . . . . . . . . . . . . . . BLW=00000  58C   0 000 07C   DS 1C           Display
+     68       3  SQLWARN5. . . . . . . . . . . . . . . . . BLW=00000  58D   0 000 07D   DS 1C           Display
+     69       3  SQLWARN6. . . . . . . . . . . . . . . . . BLW=00000  58E   0 000 07E   DS 1C           Display
+     70       3  SQLWARN7. . . . . . . . . . . . . . . . . BLW=00000  58F   0 000 07F   DS 1C           Display
+     71     2  SQLEXT. . . . . . . . . . . . . . . . . . . BLW=00000  590   0 000 080   DS 0CL8         Group
+     72       3  SQLWARN8. . . . . . . . . . . . . . . . . BLW=00000  590   0 000 080   DS 1C           Display
+     73       3  SQLWARN9. . . . . . . . . . . . . . . . . BLW=00000  591   0 000 081   DS 1C           Display
+     74       3  SQLWARNA. . . . . . . . . . . . . . . . . BLW=00000  592   0 000 082   DS 1C           Display
+     75       3  SQLSTATE. . . . . . . . . . . . . . . . . BLW=00000  593   0 000 083   DS 5C           Display
+     99   1  DCLTBTRDMAC . . . . . . . . . . . . . . . . . BLW=00000  598               DS 0CL27        Group
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    21
+0Source   Hierarchy and                                    Base       Hex-Displacement  Asmblr Data                    Data Def
+ LineID   Data Name                                        Locator    Blk   Structure   Definition      Data Type      Attributes
+    100     2  MAC-CURRENCY. . . . . . . . . . . . . . . . BLW=00000  598   0 000 000   DS 3C           Display
+    101     2  MAC-NUMBER. . . . . . . . . . . . . . . . . BLW=00000  59B   0 000 003   DS 4C           Binary
+    102     2  MAC-CUSTOMER-ID . . . . . . . . . . . . . . BLW=00000  59F   0 000 007   DS 12C          Display
+    103     2  MAC-BALANCE . . . . . . . . . . . . . . . . BLW=00000  5AB   0 000 013   DS 7P           Packed-Dec
+    104     2  MAC-STATUS. . . . . . . . . . . . . . . . . BLW=00000  5B2   0 000 01A   DS 1C           Display
+    108   1  ITBTRDMAC . . . . . . . . . . . . . . . . . . BLW=00000  5B8               DS 0CL10        Group
+    109     2  INDSTRUC. . . . . . . . . . . . . . . . . . BLW=00000  5B8   0 000 000   DS 2C           Binary         O
+    124   1  SQL-VERS. . . . . . . . . . . . . . . . . . . BLW=00000  5C8               DS 0CL68        Group
+    125     2  SQL-VERS-PREF . . . . . . . . . . . . . . . BLW=00000  5C8   0 000 000   DS 4C           Display
+    126     2  SQL-VERS-DATA . . . . . . . . . . . . . . . BLW=00000  5CC   0 000 004   DS 64C          Display
+    128   77 SQL-TEMP. . . . . . . . . . . . . . . . . . . BLW=00000  610               DS 128C         Display
+    129   77 DSN-TEMP. . . . . . . . . . . . . . . . . . . BLW=00000  690               DS 4C           Binary
+    130   77 DSN-TMP2. . . . . . . . . . . . . . . . . . . BLW=00000  698               DS 10P          Packed-Dec
+    131   77 DSNNROWS. . . . . . . . . . . . . . . . . . . BLW=00000  6A8               DS 4C           Binary
+    132   77 DSNNTYPE. . . . . . . . . . . . . . . . . . . BLW=00000  6B0               DS 2C           Binary
+    133   77 DSNNLEN . . . . . . . . . . . . . . . . . . . BLW=00000  6B8               DS 2C           Binary
+    134   77 SQL-NULL. . . . . . . . . . . . . . . . . . . BLW=00000  6C0               DS 4C           Binary
+    135   77 SQL-INIT-FLAG . . . . . . . . . . . . . . . . BLW=00000  6C8               DS 2C           Binary
+    136   88 SQL-INIT-DONE . . . . . . . . . . . . . . . .
+    137   77 SQL-FILE-READ . . . . . . . . . . . . . . . . BLW=00000  6D0               DS 4C           Binary
+    138   77 SQL-FILE-CREATE . . . . . . . . . . . . . . . BLW=00000  6D8               DS 4C           Binary
+    139   77 SQL-FILE-OVERWRITE. . . . . . . . . . . . . . BLW=00000  6E0               DS 4C           Binary
+    140   77 SQL-FILE-APPEND . . . . . . . . . . . . . . . BLW=00000  6E8               DS 4C           Binary
+    141   1  SQL-PLIST3. . . . . . . . . . . . . . . . . . BLW=00000  6F0               DS 0CL168       Group
+    142     2  SQL-PLIST-CON . . . . . . . . . . . . . . . BLW=00000  6F0   0 000 000   DS 4C           Binary
+    143     2  SQL-CALLTYPE. . . . . . . . . . . . . . . . BLW=00000  6F4   0 000 004   DS 2C           Binary
+    144     2  SQL-PROG-NAME . . . . . . . . . . . . . . . BLW=00000  6F6   0 000 006   DS 8C           Display
+    145     2  SQL-TIMESTAMP-1 . . . . . . . . . . . . . . BLW=00000  6FE   0 000 00E   DS 4C           Binary
+    146     2  SQL-TIMESTAMP-2 . . . . . . . . . . . . . . BLW=00000  702   0 000 012   DS 4C           Binary
+    147     2  SQL-SECTION . . . . . . . . . . . . . . . . BLW=00000  706   0 000 016   DS 2C           Binary
+    148     2  SQL-CODEPTR . . . . . . . . . . . . . . . . BLW=00000  708   0 000 018   DS 4C           Binary
+    149     2  SQL-VPARMPTR. . . . . . . . . . . . . . . . BLW=00000  70C   0 000 01C   DS 4C           Binary
+    150     2  SQL-APARMPTR. . . . . . . . . . . . . . . . BLW=00000  710   0 000 020   DS 4C           Binary
+    151     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  714   0 000 024   DS 2C           Binary
+    152     2  SQL-STMT-TYPE . . . . . . . . . . . . . . . BLW=00000  716   0 000 026   DS 2C           Binary
+    153     2  SQL-STMT-NUM. . . . . . . . . . . . . . . . BLW=00000  718   0 000 028   DS 4C           Binary
+    154     2  SQL-PLIST-FLG . . . . . . . . . . . . . . . BLW=00000  71C   0 000 02C   DS 2C           Binary
+    155     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  71E   0 000 02E   DS 18C          Display
+    157     2  SQL-PVAR-LIST3. . . . . . . . . . . . . . . BLW=00000  730   0 000 040   DS 0CL104       Group
+    158       3  PRE-SQLDAID . . . . . . . . . . . . . . . BLW=00000  730   0 000 040   DS 8C           Display
+    159       3  PRE-SQLDABC . . . . . . . . . . . . . . . BLW=00000  738   0 000 048   DS 4C           Binary
+    160       3  PRE-SQLN. . . . . . . . . . . . . . . . . BLW=00000  73C   0 000 04C   DS 2C           Binary
+    161       3  PRE-SQLLD . . . . . . . . . . . . . . . . BLW=00000  73E   0 000 04E   DS 2C           Binary
+    162       3  PRE-SQLVAR. . . . . . . . . . . . . . . . BLW=00000  740   0 000 050   DS 0CL88        Group
+    163         4  SQLVAR-BASE1. . . . . . . . . . . . . . BLW=00000  740   0 000 050   DS 0CL44        Group
+    164           5  SQL-PVAR-TYPE1. . . . . . . . . . . . BLW=00000  740   0 000 050   DS 2C           Binary
+    165           5  SQL-PVAR-LEN1 . . . . . . . . . . . . BLW=00000  742   0 000 052   DS 2C           Binary
+    166           5  SQL-PVAR-ADDRS1 . . . . . . . . . . . BLW=00000  744   0 000 054   DS 0CL8         Group
+    167             6  SQL-PVAR-ADDR1. . . . . . . . . . . BLW=00000  744   0 000 054   DS 4C           Binary
+    168             6  SQL-PVAR-IND1 . . . . . . . . . . . BLW=00000  748   0 000 058   DS 4C           Binary
+    169           5  SQL-PVAR-NAME1. . . . . . . . . . . . BLW=00000  74C   0 000 05C   DS 0CL32        Group
+    170             6  SQL-PVAR-NAMEL1 . . . . . . . . . . BLW=00000  74C   0 000 05C   DS 2C           Binary
+    171             6  SQL-PVAR-NAMEC1 . . . . . . . . . . BLW=00000  74E   0 000 05E   DS 30C          Display
+    172         4  SQLVAR-BASE2. . . . . . . . . . . . . . BLW=00000  76C   0 000 07C   DS 0CL44        Group
+    173           5  SQL-PVAR-TYPE2. . . . . . . . . . . . BLW=00000  76C   0 000 07C   DS 2C           Binary
+    174           5  SQL-PVAR-LEN2 . . . . . . . . . . . . BLW=00000  76E   0 000 07E   DS 2C           Binary
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    22
+0Source   Hierarchy and                                    Base       Hex-Displacement  Asmblr Data                    Data Def
+ LineID   Data Name                                        Locator    Blk   Structure   Definition      Data Type      Attributes
+    175           5  SQL-PVAR-ADDRS2 . . . . . . . . . . . BLW=00000  770   0 000 080   DS 0CL8         Group
+    176             6  SQL-PVAR-ADDR2. . . . . . . . . . . BLW=00000  770   0 000 080   DS 4C           Binary
+    177             6  SQL-PVAR-IND2 . . . . . . . . . . . BLW=00000  774   0 000 084   DS 4C           Binary
+    178           5  SQL-PVAR-NAME2. . . . . . . . . . . . BLW=00000  778   0 000 088   DS 0CL32        Group
+    179             6  SQL-PVAR-NAMEL2 . . . . . . . . . . BLW=00000  778   0 000 088   DS 2C           Binary
+    180             6  SQL-PVAR-NAMEC2 . . . . . . . . . . BLW=00000  77A   0 000 08A   DS 30C          Display
+    181   1  SQL-PLIST4. . . . . . . . . . . . . . . . . . BLW=00000  798               DS 0CL124       Group
+    182     2  SQL-PLIST-CON . . . . . . . . . . . . . . . BLW=00000  798   0 000 000   DS 4C           Binary
+    183     2  SQL-CALLTYPE. . . . . . . . . . . . . . . . BLW=00000  79C   0 000 004   DS 2C           Binary
+    184     2  SQL-PROG-NAME . . . . . . . . . . . . . . . BLW=00000  79E   0 000 006   DS 8C           Display
+    185     2  SQL-TIMESTAMP-1 . . . . . . . . . . . . . . BLW=00000  7A6   0 000 00E   DS 4C           Binary
+    186     2  SQL-TIMESTAMP-2 . . . . . . . . . . . . . . BLW=00000  7AA   0 000 012   DS 4C           Binary
+    187     2  SQL-SECTION . . . . . . . . . . . . . . . . BLW=00000  7AE   0 000 016   DS 2C           Binary
+    188     2  SQL-CODEPTR . . . . . . . . . . . . . . . . BLW=00000  7B0   0 000 018   DS 4C           Binary
+    189     2  SQL-VPARMPTR. . . . . . . . . . . . . . . . BLW=00000  7B4   0 000 01C   DS 4C           Binary
+    190     2  SQL-APARMPTR. . . . . . . . . . . . . . . . BLW=00000  7B8   0 000 020   DS 4C           Binary
+    191     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  7BC   0 000 024   DS 2C           Binary
+    192     2  SQL-STMT-TYPE . . . . . . . . . . . . . . . BLW=00000  7BE   0 000 026   DS 2C           Binary
+    193     2  SQL-STMT-NUM. . . . . . . . . . . . . . . . BLW=00000  7C0   0 000 028   DS 4C           Binary
+    194     2  SQL-PLIST-FLG . . . . . . . . . . . . . . . BLW=00000  7C4   0 000 02C   DS 2C           Binary
+    195     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  7C6   0 000 02E   DS 18C          Display
+    197     2  SQL-AVAR-LIST4. . . . . . . . . . . . . . . BLW=00000  7D8   0 000 040   DS 0CL60        Group
+    198       3  PRE-SQLDAID . . . . . . . . . . . . . . . BLW=00000  7D8   0 000 040   DS 8C           Display
+    199       3  PRE-SQLDABC . . . . . . . . . . . . . . . BLW=00000  7E0   0 000 048   DS 4C           Binary
+    200       3  PRE-SQLN. . . . . . . . . . . . . . . . . BLW=00000  7E4   0 000 04C   DS 2C           Binary
+    201       3  PRE-SQLLD . . . . . . . . . . . . . . . . BLW=00000  7E6   0 000 04E   DS 2C           Binary
+    202       3  PRE-SQLVAR. . . . . . . . . . . . . . . . BLW=00000  7E8   0 000 050   DS 0CL44        Group
+    203         4  SQLVAR-BASE1. . . . . . . . . . . . . . BLW=00000  7E8   0 000 050   DS 0CL44        Group
+    204           5  SQL-AVAR-TYPE1. . . . . . . . . . . . BLW=00000  7E8   0 000 050   DS 2C           Binary
+    205           5  SQL-AVAR-LEN1 . . . . . . . . . . . . BLW=00000  7EA   0 000 052   DS 2C           Binary
+    206           5  SQL-AVAR-ADDRS1 . . . . . . . . . . . BLW=00000  7EC   0 000 054   DS 0CL8         Group
+    207             6  SQL-AVAR-ADDR1. . . . . . . . . . . BLW=00000  7EC   0 000 054   DS 4C           Binary
+    208             6  SQL-AVAR-IND1 . . . . . . . . . . . BLW=00000  7F0   0 000 058   DS 4C           Binary
+    209           5  SQL-AVAR-NAME1. . . . . . . . . . . . BLW=00000  7F4   0 000 05C   DS 0CL32        Group
+    210             6  SQL-AVAR-NAMEL1 . . . . . . . . . . BLW=00000  7F4   0 000 05C   DS 2C           Binary
+    211             6  SQL-AVAR-NAMEC1 . . . . . . . . . . BLW=00000  7F6   0 000 05E   DS 30C          Display
+    212   1  SQL-PLIST5. . . . . . . . . . . . . . . . . . BLW=00000  818               DS 0CL212       Group
+    213     2  SQL-PLIST-CON . . . . . . . . . . . . . . . BLW=00000  818   0 000 000   DS 4C           Binary
+    214     2  SQL-CALLTYPE. . . . . . . . . . . . . . . . BLW=00000  81C   0 000 004   DS 2C           Binary
+    215     2  SQL-PROG-NAME . . . . . . . . . . . . . . . BLW=00000  81E   0 000 006   DS 8C           Display
+    216     2  SQL-TIMESTAMP-1 . . . . . . . . . . . . . . BLW=00000  826   0 000 00E   DS 4C           Binary
+    217     2  SQL-TIMESTAMP-2 . . . . . . . . . . . . . . BLW=00000  82A   0 000 012   DS 4C           Binary
+    218     2  SQL-SECTION . . . . . . . . . . . . . . . . BLW=00000  82E   0 000 016   DS 2C           Binary
+    219     2  SQL-CODEPTR . . . . . . . . . . . . . . . . BLW=00000  830   0 000 018   DS 4C           Binary
+    220     2  SQL-VPARMPTR. . . . . . . . . . . . . . . . BLW=00000  834   0 000 01C   DS 4C           Binary
+    221     2  SQL-APARMPTR. . . . . . . . . . . . . . . . BLW=00000  838   0 000 020   DS 4C           Binary
+    222     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  83C   0 000 024   DS 2C           Binary
+    223     2  SQL-STMT-TYPE . . . . . . . . . . . . . . . BLW=00000  83E   0 000 026   DS 2C           Binary
+    224     2  SQL-STMT-NUM. . . . . . . . . . . . . . . . BLW=00000  840   0 000 028   DS 4C           Binary
+    225     2  SQL-PLIST-FLG . . . . . . . . . . . . . . . BLW=00000  844   0 000 02C   DS 2C           Binary
+    226     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  846   0 000 02E   DS 18C          Display
+    228     2  SQL-PVAR-LIST5. . . . . . . . . . . . . . . BLW=00000  858   0 000 040   DS 0CL148       Group
+    229       3  PRE-SQLDAID . . . . . . . . . . . . . . . BLW=00000  858   0 000 040   DS 8C           Display
+    230       3  PRE-SQLDABC . . . . . . . . . . . . . . . BLW=00000  860   0 000 048   DS 4C           Binary
+    231       3  PRE-SQLN. . . . . . . . . . . . . . . . . BLW=00000  864   0 000 04C   DS 2C           Binary
+    232       3  PRE-SQLLD . . . . . . . . . . . . . . . . BLW=00000  866   0 000 04E   DS 2C           Binary
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    23
+0Source   Hierarchy and                                    Base       Hex-Displacement  Asmblr Data                    Data Def
+ LineID   Data Name                                        Locator    Blk   Structure   Definition      Data Type      Attributes
+    233       3  PRE-SQLVAR. . . . . . . . . . . . . . . . BLW=00000  868   0 000 050   DS 0CL132       Group
+    234         4  SQLVAR-BASE1. . . . . . . . . . . . . . BLW=00000  868   0 000 050   DS 0CL44        Group
+    235           5  SQL-PVAR-TYPE1. . . . . . . . . . . . BLW=00000  868   0 000 050   DS 2C           Binary
+    236           5  SQL-PVAR-LEN1 . . . . . . . . . . . . BLW=00000  86A   0 000 052   DS 2C           Binary
+    237           5  SQL-PVAR-ADDRS1 . . . . . . . . . . . BLW=00000  86C   0 000 054   DS 0CL8         Group
+    238             6  SQL-PVAR-ADDR1. . . . . . . . . . . BLW=00000  86C   0 000 054   DS 4C           Binary
+    239             6  SQL-PVAR-IND1 . . . . . . . . . . . BLW=00000  870   0 000 058   DS 4C           Binary
+    240           5  SQL-PVAR-NAME1. . . . . . . . . . . . BLW=00000  874   0 000 05C   DS 0CL32        Group
+    241             6  SQL-PVAR-NAMEL1 . . . . . . . . . . BLW=00000  874   0 000 05C   DS 2C           Binary
+    242             6  SQL-PVAR-NAMEC1 . . . . . . . . . . BLW=00000  876   0 000 05E   DS 30C          Display
+    243         4  SQLVAR-BASE2. . . . . . . . . . . . . . BLW=00000  894   0 000 07C   DS 0CL44        Group
+    244           5  SQL-PVAR-TYPE2. . . . . . . . . . . . BLW=00000  894   0 000 07C   DS 2C           Binary
+    245           5  SQL-PVAR-LEN2 . . . . . . . . . . . . BLW=00000  896   0 000 07E   DS 2C           Binary
+    246           5  SQL-PVAR-ADDRS2 . . . . . . . . . . . BLW=00000  898   0 000 080   DS 0CL8         Group
+    247             6  SQL-PVAR-ADDR2. . . . . . . . . . . BLW=00000  898   0 000 080   DS 4C           Binary
+    248             6  SQL-PVAR-IND2 . . . . . . . . . . . BLW=00000  89C   0 000 084   DS 4C           Binary
+    249           5  SQL-PVAR-NAME2. . . . . . . . . . . . BLW=00000  8A0   0 000 088   DS 0CL32        Group
+    250             6  SQL-PVAR-NAMEL2 . . . . . . . . . . BLW=00000  8A0   0 000 088   DS 2C           Binary
+    251             6  SQL-PVAR-NAMEC2 . . . . . . . . . . BLW=00000  8A2   0 000 08A   DS 30C          Display
+    252         4  SQLVAR-BASE3. . . . . . . . . . . . . . BLW=00000  8C0   0 000 0A8   DS 0CL44        Group
+    253           5  SQL-PVAR-TYPE3. . . . . . . . . . . . BLW=00000  8C0   0 000 0A8   DS 2C           Binary
+    254           5  SQL-PVAR-LEN3 . . . . . . . . . . . . BLW=00000  8C2   0 000 0AA   DS 2C           Binary
+    255           5  SQL-PVAR-ADDRS3 . . . . . . . . . . . BLW=00000  8C4   0 000 0AC   DS 0CL8         Group
+    256             6  SQL-PVAR-ADDR3. . . . . . . . . . . BLW=00000  8C4   0 000 0AC   DS 4C           Binary
+    257             6  SQL-PVAR-IND3 . . . . . . . . . . . BLW=00000  8C8   0 000 0B0   DS 4C           Binary
+    258           5  SQL-PVAR-NAME3. . . . . . . . . . . . BLW=00000  8CC   0 000 0B4   DS 0CL32        Group
+    259             6  SQL-PVAR-NAMEL3 . . . . . . . . . . BLW=00000  8CC   0 000 0B4   DS 2C           Binary
+    260             6  SQL-PVAR-NAMEC3 . . . . . . . . . . BLW=00000  8CE   0 000 0B6   DS 30C          Display
+    261   1  SQL-PLIST6. . . . . . . . . . . . . . . . . . BLW=00000  8F0               DS 0CL64        Group
+    262     2  SQL-PLIST-CON . . . . . . . . . . . . . . . BLW=00000  8F0   0 000 000   DS 4C           Binary
+    263     2  SQL-CALLTYPE. . . . . . . . . . . . . . . . BLW=00000  8F4   0 000 004   DS 2C           Binary
+    264     2  SQL-PROG-NAME . . . . . . . . . . . . . . . BLW=00000  8F6   0 000 006   DS 8C           Display
+    265     2  SQL-TIMESTAMP-1 . . . . . . . . . . . . . . BLW=00000  8FE   0 000 00E   DS 4C           Binary
+    266     2  SQL-TIMESTAMP-2 . . . . . . . . . . . . . . BLW=00000  902   0 000 012   DS 4C           Binary
+    267     2  SQL-SECTION . . . . . . . . . . . . . . . . BLW=00000  906   0 000 016   DS 2C           Binary
+    268     2  SQL-CODEPTR . . . . . . . . . . . . . . . . BLW=00000  908   0 000 018   DS 4C           Binary
+    269     2  SQL-VPARMPTR. . . . . . . . . . . . . . . . BLW=00000  90C   0 000 01C   DS 4C           Binary
+    270     2  SQL-APARMPTR. . . . . . . . . . . . . . . . BLW=00000  910   0 000 020   DS 4C           Binary
+    271     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  914   0 000 024   DS 2C           Binary
+    272     2  SQL-STMT-TYPE . . . . . . . . . . . . . . . BLW=00000  916   0 000 026   DS 2C           Binary
+    273     2  SQL-STMT-NUM. . . . . . . . . . . . . . . . BLW=00000  918   0 000 028   DS 4C           Binary
+    274     2  SQL-PLIST-FLG . . . . . . . . . . . . . . . BLW=00000  91C   0 000 02C   DS 2C           Binary
+    275     2  FILLER. . . . . . . . . . . . . . . . . . . BLW=00000  91E   0 000 02E   DS 18C          Display
+    280   1  TRD-ORDER-PAIR. . . . . . . . . . . . . . . . BLL=00001  000               DS 0CL88        Group
+    281     2  TRD-EXCHANGE. . . . . . . . . . . . . . . . BLL=00001  000   0 000 000   DS 10C          Display
+    282     2  TRD-BUYER-ID. . . . . . . . . . . . . . . . BLL=00001  00A   0 000 00A   DS 12C          Display
+    283     2  TRD-SELLER-ID . . . . . . . . . . . . . . . BLL=00001  016   0 000 016   DS 12C          Display
+    284     2  TRD-ORDER-ID. . . . . . . . . . . . . . . . BLL=00001  022   0 000 022   DS 12C          Display
+    285     2  TRD-FIGI. . . . . . . . . . . . . . . . . . BLL=00001  02E   0 000 02E   DS 12C          Display
+    286     2  TRD-ORDER-QTY . . . . . . . . . . . . . . . BLL=00001  03A   0 000 03A   DS 5P           Packed-Dec
+    287     2  TRD-CURRENCY. . . . . . . . . . . . . . . . BLL=00001  03F   0 000 03F   DS 3C           Display
+    288     2  TRD-ORDER-AMOUNT. . . . . . . . . . . . . . BLL=00001  042   0 000 042   DS 5P           Packed-Dec
+    289     2  TRD-BUYER-SEC-ACC-NUM . . . . . . . . . . . BLL=00001  047   0 000 047   DS 4C           Binary
+    290     2  TRD-BUYER-MONEY-ACC-NUM . . . . . . . . . . BLL=00001  04B   0 000 04B   DS 4C           Binary
+    291     2  TRD-SELLER-SEC-ACC-NUM. . . . . . . . . . . BLL=00001  04F   0 000 04F   DS 4C           Binary
+    292     2  TRD-SELLER-MONEY-ACC-NUM. . . . . . . . . . BLL=00001  053   0 000 053   DS 4C           Binary
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    24
+0Source   Hierarchy and                                    Base       Hex-Displacement  Asmblr Data                    Data Def
+ LineID   Data Name                                        Locator    Blk   Structure   Definition      Data Type      Attributes
+    293     2  TRD-STATUS. . . . . . . . . . . . . . . . . BLL=00001  057   0 000 057   DS 1C           Display
+    294     88 TRD-ACCEPTED. . . . . . . . . . . . . . . .
+    295     88 TRD-SAC-BOOKING-DONE. . . . . . . . . . . .
+    296     88 TRD-SAC-BOOKING-FAILED. . . . . . . . . . .
+    297     88 TRD-MAC-BOOKING-DONE. . . . . . . . . . . .
+    298     88 TRD-MAC-BOOKING-FAILED. . . . . . . . . . .
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    25
+0PROGRAM GLOBAL TABLE BEGINS AT LOCATION 0000FC FOR 000038 BYTES
+ THE PGT CONTAINS 000001 CELL(S) FOR ADDRESSABILITY TO THE CGT
+ PBL1    AT LOCATION 000460 FOR LINE 2
+0
+ LITERAL POOL MAP FOR SYSTEM LITERALS IN THE PGT:
+ 0000FC  (LIT+0)      3B9ACA00 00000001 00000000 40404040 40404040 40404040 40404040 40404040  |............                    |
+ 00011C  (LIT+32)     40404040 40404040 40400000 00000000                                      |          ......                |
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    26
+0CONSTANT GLOBAL TABLE BEGINS AT LOCATION 000134 FOR 00032B BYTES
+ LITERAL POOL MAP FOR LITERALS IN THE CGT:
+
+ 000154  (LIT+0)      FFFFFFFC 00001000 400000C8 00000001 000000CD 00400000 00000094 000000A7  |........ ..H......... .....m...x|
+ 000174  (LIT+32)     0000003C 0000009C 00400400 00000068 00000088 1E85D720 1BA594E6 00404000  |......... .........h.eP..vmW.  .|
+ 000194  (LIT+64)     00000020 00000010 00000008 00000002 00000000 002E0005 002D00EA 0C0201E4  |...............................U|
+ 0001B4  (LIT+96)     001E0004 01F001C4 000304B8 0032F2F0 F2F360F0 F460F2F0 60F0F14B F0F74BF3  |.....0.D......2023-04-20-01.07.3|
+ 0001D4  (LIT+128)    F94BF8F4 F6F4F9F2 00000000 00000000 00000000 00000000 0000C1D7 D7D3C9C3  |9.846492..................APPLIC|
+ 0001F4  (LIT+160)    C1E3C9D6 D5C4E2D5 C8D3C940 40C4E2D5 C8C1C4C4 F2C4E2D5 C8C1C4C4 D9E3D9C4  |ATIONDSNHLI  DSNHADD2DSNHADDRTRD|
+ 000214  (LIT+192)    D7C2F0F0 F2E2D8D3 C4C14040 08545244 50423030 33E3D9C4 D7C2C5E7 C3E2E8E2  |PB002SQLDA  ....&....TRDPBEXCSYS|
+ 000234  (LIT+224)    D6E4E340 40C9C7E9 E2D9E3C3 C4E2E8E2 E3C5D4C4 C1E3C1E5 C5D94B00 01020304  |OUT  IGZSRTCDSYSTEMDATAVER......|
+ 000254  (LIT+256)    05060708 090A0B0C 0D0E0F10 11121314 15161718 191A1B1C 1D1E1F20 21222324  |................................|
+ 000274  (LIT+288)    25262728 292A2B2C 2D2E2F30 31323334 35363738 393A3B3C 3D3E3F40 41424344  |........................... ....|
+ 000294  (LIT+320)    45464748 494A4B4C 4D4E4F50 51525354 55565758 595A5B5C 5D5E5F60 61626364  |.....½.<(+|&.........!$*).^-/...|
+ 0002B4  (LIT+352)    65666768 696A6B6C 6D6E6F70 71727374 75767778 797A7B7C 7D7E7F80 C1C2C3C4  |......,%_>?..........:#@'=".ABCD|
+ 0002D4  (LIT+384)    C5C6C7C8 C98A8B8C 8D8E8F90 D1D2D3D4 D5D6D7D8 D99A9B9C 9D9E9FA0 A1E2E3E4  |EFGHI.......JKLMNOPQR........STU|
+ 0002F4  (LIT+416)    E5E6E7E8 E9AAABAC ADAEAFB0 B1B2B3B4 B5B6B7B8 B9BABBBC BDBEBFC0 C1C2C3C4  |VWXYZ.......................ABCD|
+ 000314  (LIT+448)    C5C6C7C8 C9CACBCC CDCECFD0 D1D2D3D4 D5D6D7D8 D9DADBDC DDDEDFE0 E1E2E3E4  |EFGHI.......JKLMNOPQR........STU|
+ 000334  (LIT+480)    E5E6E7E8 E9EAEBEC EDEEEFF0 F1F2F3F4 F5F6F7F8 F9FAFBFC FDFEFF00 00000000  |VWXYZ......0123456789...........|
+ 000354  (LIT+512)    00012C00 00000100 00013000 00000200 00000000 00000000 00000000 00000000  |................................|
+ 000374  (LIT+544)    00000000 00000000 00000000 00000000 00000080 000000C6 85A38388 40D4C1C3  |.......................Fetch MAC|
+ 000394  (LIT+576)    6DC2D6D6 D2C9D5C7 40C3A499 A2969940 86818993 8584407A 40E2D8D3 C3D6C4C5  |_BOOKING Cursor failed : SQLCODE|
+ 0003B4  (LIT+608)    407E40D6 97859540 D4C1C36D C2D6D6D2 C9D5C740 C3A499A2 96994086 81899385  | = Open MAC_BOOKING Cursor faile|
+ 0003D4  (LIT+640)    84407A40 E2D8D3C3 D6C4C540 7E40E497 8481A385 40A4A289 958740D4 C1C36DC2  |d : SQLCODE = Update using MAC_B|
+ 0003F4  (LIT+672)    D6D6D2C9 D5C740C3 A499A296 99408681 89938584 407A4040 00000000 00000000  |OOKING Cursor failed :  ........|
+ 000414  (LIT+704)    00000040 40202020 A6080000 40000000 00000000 00000000 00000000 40000000  |...  ...w... ............... ...|
+ 000434  (LIT+736)    0025C000 01C00008 08000030 00DD4000 00000040 C0000140 00080800 003000DD  |.............. .... ... ........|
+ 000454  (LIT+768)    02C00008 08000030 00DDFF                                                 |...........                     |
+ LINE #  HEXLOC  VERB                        LINE #  HEXLOC  VERB                        LINE #  HEXLOC  VERB
+ 000304 000840 GO                            000306 000850 MOVE                          000307 00085A CALL
+ 000309 0008B2 CALL                          000312 000922 CALL                          000313 00097A CALL
+ 000315 0009D2 CALL                          000317 000A32 CALL                          000318 000A8A CALL
+ 000320 000AE2 CALL                          000323 000B62 CALL                          000324 000BBA CALL
+ 000326 000C1C CONTINUE                      000331 000C24 SET                           000333 000C30 SET
+ 000334 000C38 PERFORM                       000337 000C58 IF                            000339 000C70 SET
+ 000340 000C7C SET                           000341 000C84 PERFORM                       000345 000CA8 GOBACK
+ 000350 000CBC IF                            000351 000CD0 MOVE                          000352 000CDE MOVE
+ 000354 000CF8 MOVE                          000355 000D06 MOVE                          000361 000D18 PERFORM
+ 000362 000D44 CALL                          000365 000D94 IF                            000366 000DC2 SET
+ 000367 000DCE MOVE                          000368 000E30 SET                           000369 000E38 MOVE
+ 000370 000E46 STRING                        000376 000E56 PERFORM                       000378 000E76 GO
+ 000385 000E86 PERFORM                       000386 000EB2 CALL                          000389 000F02 IF
+ 000390 000F30 IF                            000391 000F44 COMPUTE                       000393 000F68 COMPUTE
+ 000401 000F84 PERFORM                       000402 000FB0 CALL                          000405 001000 IF
+ 000406 00102E SET                           000408 001046 SET                           000409 001052 MOVE
+ 000410 0010B4 SET                           000411 0010BC MOVE                          000412 0010CA STRING
+ 000419 0010E0 PERFORM                       000423 00110C SET                           000424 001118 MOVE
+ 000425 00117A SET                           000426 001182 MOVE                          000427 001190 STRING
+ 000433 0011A0 PERFORM                       000439 0011C4 PERFORM                       000440 0011F0 CALL
+ 000445 001244 EXIT                          000455 001252 MOVE                          000456 001268 MOVE
+ 000458 001272 EVALUATE                      000459 001276 WHEN                          000460 00128E MOVE
+ 000461 0012A6 WHEN                          000462 0012BE MOVE                          000463 0012D6 WHEN
+ 000464 0012EE MOVE                          000466 001302 ADD                           000468 001312 CALL
+ 000472 001384 CONTINUE                      000476 00138C EXIT
+0
+   DEBUGINF TABLE LOCATED AT 001434 FOR 00004E BYTES
+
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    27
+0                   *** TGT MEMORY MAP ***
+                    TGTLOC
+
+                    000000  RESERVED - 72 BYTES
+                    000048  TGT IDENTIFIER
+                    00004C  RESERVED - 4 BYTES
+                    000050  TGT LEVEL INDICATOR
+                    000051  RESERVED - 3 BYTES
+                    000054  32 BIT SWITCH
+                    000058  POINTER TO RUNCOM
+                    00005C  POINTER TO COBVEC
+                    000060  POINTER TO PROGRAM DYNAMIC BLOCK TABLE
+                    000064  NUMBER OF FCB'S
+                    000068  WORKING-STORAGE LENGTH
+                    00006C  RESERVED - 4 BYTES
+                    000070  ADDRESS OF IGZESMG WORK AREA
+                    000074  ADDRESS OF 1ST GETMAIN BLOCK (SPACE MGR)
+                    000078  RESERVED - 2 BYTES
+                    00007A  RESERVED - 2 BYTES
+                    00007C  RESERVED - 2 BYTES
+                    00007E  MERGE FILE NUMBER
+                    000080  ADDRESS OF CEL COMMON ANCHOR AREA
+                    000084  LENGTH OF TGT
+                    000088  RESERVED - 1 SINGLE BYTE FIELD
+                    000089  PROGRAM MASK USED BY THIS PROGRAM
+                    00008A  RESERVED - 2 SINGLE BYTE FIELDS
+                    00008C  NUMBER OF SECONDARY FCB CELLS
+                    000090  LENGTH OF THE ALTER VN(VNI) VECTOR
+                    000094  COUNT OF NESTED PROGRAMS IN COMPILE UNIT
+                    000098  DDNAME FOR DISPLAY OUTPUT
+                    0000A0  RESERVED - 8 BYTES
+                    0000A8  POINTER TO COM-REG SPECIAL REGISTER
+                    0000AC  RESERVED - 52 BYTES
+                    0000E0  ALTERNATE COLLATING SEQUENCE TABLE PTR.
+                    0000E4  ADDRESS OF SORT G.N. ADDRESS BLOCK
+                    0000E8  ADDRESS OF PGT
+                    0000EC  RESERVED - 4 BYTES
+                    0000F0  POINTER TO 1ST IPCB
+                    0000F4  ADDRESS OF THE CLLE FOR THIS PROGRAM
+                    0000F8  POINTER TO ABEND INFORMATION TABLE
+                    0000FC  POINTER TO TEST INFO FIELDS IN THE TGT
+                    000100  ADDRESS OF START OF COBOL PROGRAM
+                    000104  POINTER TO ALTER VNI'S IN CGT
+                    000108  POINTER TO ALTER VN'S IN TGT
+                    00010C  POINTER TO FIRST PBL IN THE PGT
+                    000110  POINTER TO FIRST FCB CELL
+                    000114  WORKING-STORAGE ADDRESS
+                    000118  POINTER TO FIRST SECONDARY FCB CELL
+                    00011C  POINTER TO STATIC CLASS INFO BLOCK 1
+                    000120  POINTER TO STATIC CLASS INFO BLOCK 2
+
+                    *** VARIABLE PORTION OF TGT ***
+
+                    000124  BASE LOCATORS FOR SPECIAL REGISTERS
+                    00012C  BASE LOCATORS FOR WORKING-STORAGE
+                    000130  BASE LOCATORS FOR LINKAGE-SECTION
+                    000138  CLLE ADDR. CELLS FOR CALL LIT. SUB-PGMS.
+                    000170  TEST INFORMATION AREA
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    28
+0                   000198  INTERNAL PROGRAM CONTROL BLOCKS
+
+                    *** DSA MEMORY MAP ***
+                  DSALOC
+
+                  00000000  REGISTER SAVE AREA
+                  0000004C  STACK NAB (NEXT AVAILABLE BYTE)
+                  00000058  ADDRESS OF INLINE-CODE PRIMARY DSA
+                  0000005C  ADDRESS OF TGT
+                  00000060  ADDRESS OF CAA
+                  00000080  XML PARSE WORK AREA ANCHOR
+                  00000084  SWITCHES
+                  00000088  CURRENT INT. PROGRAM OR METHOD NUMBER
+                  0000008C  ADDRESS OF CALL STATEMENT PROGRAM NAME
+                  00000090  CALC ROUTINE REGISTER SAVE AREA
+                  000000C4  ADDRESS OF FILE MUTEX USE COUNT CELLS
+                  000000C8  PROCEDURE DIVISION RETURNING VALUE
+
+                    *** VARIABLE PORTION OF DSA ***
+
+                  000000D0  SAVE AREA FOR FLOAT REGISTERS 8-15
+                  00000110  BACKSTORE CELLS FOR SYMBOLIC REGISTERS
+                  00000130  VARIABLE-LENGTH CELLS
+                  00000148  VARIABLE NAME (VN) CELLS FOR PERFORM
+                  0000015C  PERFORM SAVE CELLS
+                  00000188  TEMPORARY STORAGE-2
+                  000001B0  CALL STATEMENT PROGRAM NAME
+0
+ TGT      WILL BE ALLOCATED FOR 000001AC BYTES
+ SPEC-REG WILL BE ALLOCATED FOR 0000007E BYTES
+ WRK-STOR WILL BE ALLOCATED FOR 00000930 BYTES
+ DSA      WILL BE ALLOCATED FOR 00000250 BYTES
+0CONSTANT GLOBAL TABLE FOR DYNAMIC STORAGE INITIALIZATION AT LOCATION 0014B8
+0INITD CODE FOR DYNAMIC STORAGE INITIALIZATION BEGINS AT LOCATION 001650 FOR LENGTH 00009A
+1PP 5655-S71 IBM Enterprise COBOL for z/OS  4.1.0               TRDPB002  Date 04/19/2023  Time 21:07:40   Page    29
+0LineID  Message code  Message text
+
+         IGYSC0205-W   Warning message(s) were issued during library phase processing.  Refer to the beginning of the listing.
+-Messages    Total    Informational    Warning    Error    Severe    Terminating
+0Printed:       2           1              1
+-* Statistics for COBOL program TRDPB002:
+ *    Source records = 476
+ *    Data Division statements = 213
+ *    Procedure Division statements = 71
+0End of compilation 1,  program TRDPB002,  highest severity 4.
+0Return code 4

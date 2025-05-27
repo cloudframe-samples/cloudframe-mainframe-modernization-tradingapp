@@ -1,0 +1,11 @@
+//TRDPROC PROC RUNPARM='DUMMY'                                          00001004
+//*                                                                     00003000
+//STEP01   EXEC PGM=IKJEFT01,DYNAMNBR=20                                00004000
+//STEPLIB  DD DSN=DSNC10.DBCG.SDSNEXIT,DISP=SHR                         00005000
+//         DD DSN=DSNC10.SDSNLOAD,DISP=SHR                              00006000
+//         DD DSN=CLOUDFRM.TRADING.BATCHDB2.LOADLIB,DISP=SHR            00007000
+//SYSUDUMP DD SYSOUT=*                                                  00008000
+//SYSPRINT DD SYSOUT=*                                                  00009000
+//SYSTSPRT DD SYSOUT=*                                                  00010000
+//SYSOUT   DD SYSOUT=*                                                  00020000
+//SYSTSIN  DD DISP=SHR,DSN=CLOUDFRM.TRADING.BATCHDB2.CARD(&RUNPARM)     00030005
