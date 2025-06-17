@@ -1,0 +1,45 @@
+    CREATE TABLESPACE TSTRDLOG IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 PRIQTY 50
+                 SECQTY 10
+                 ERASE NO
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+           BUFFERPOOL BP0
+           LOCKSIZE ROW
+           LOCKMAX 0
+           CCSID EBCDIC
+           MAXROWS 255
+           CLOSE YES
+           SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDLOG
+     (
+        LOG_TRANSACTION       CHAR(10)       NOT NULL WITH DEFAULT
+      , LOG_CURRENCY          CHAR(3)        NOT NULL
+      , LOG_START_TS          CHAR(26)       NOT NULL
+      , LOG_END_TS            CHAR(26)       NOT NULL
+     )
+       IN DBTRADEB.TSTRDLOG
+       AUDIT NONE
+       CCSID EBCDIC
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDLOG
+           ON TRADE.TBTRDLOG
+         ( LOG_TRANSACTION      ASC
+          ,LOG_CURRENCY         ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

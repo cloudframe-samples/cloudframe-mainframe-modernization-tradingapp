@@ -1,0 +1,58 @@
+    CREATE TABLESPACE TSTRDPOS IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 NUMPARTS 10
+                 DSSIZE 4G
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+                 BUFFERPOOL BP0
+                 LOCKSIZE ROW
+                 LOCKMAX 0
+                 CCSID EBCDIC
+                 MAXROWS 255
+                 CLOSE YES
+                 SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDPOS
+     (
+        POS_CURRENCY          CHAR(3)        NOT NULL WITH DEFAULT
+      , POS_SAC_NUMBER        INTEGER NOT NULL
+      , POS_FIGI              CHAR(12)       NOT NULL WITH DEFAULT
+      , POS_BALANCE           DECIMAL(12,2)  NOT NULL
+     )
+       IN DBTRADEB.TSTRDPOS
+       AUDIT NONE
+       CCSID EBCDIC
+       PARTITION BY RANGE(POS_CURRENCY)
+       (
+         PARTITION 1    ENDING AT ( 'CAD' ),
+         PARTITION 2    ENDING AT ( 'CHF' ),
+         PARTITION 3    ENDING AT ( 'CNY' ),
+         PARTITION 4    ENDING AT ( 'EUR' ),
+         PARTITION 5    ENDING AT ( 'GBX' ),
+         PARTITION 6    ENDING AT ( 'INR' ),
+         PARTITION 7    ENDING AT ( 'JPY' ),
+         PARTITION 8    ENDING AT ( 'KRW' ),
+         PARTITION 9    ENDING AT ( 'MXN' ),
+         PARTITION 10   ENDING AT (MAXVALUE)
+       )
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDPOS
+           ON TRADE.TBTRDPOS
+         ( POS_CURRENCY         ASC
+         , POS_SAC_NUMBER       ASC
+         , POS_FIGI             ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

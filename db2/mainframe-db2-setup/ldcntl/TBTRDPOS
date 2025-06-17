@@ -1,0 +1,12 @@
+  LOAD DATA LOG NO REPLACE INDDN SYSREC00 INTO TABLE
+      TRADE.TBTRDPOS
+   (
+   POS_CURRENCY                           POSITION(       1         )
+   CHAR(                      3)                ,
+   POS_SAC_NUMBER                         POSITION(       4         )
+   INTEGER                                      ,
+   POS_FIGI                               POSITION(       8         )
+   CHAR(                     12)                ,
+   POS_BALANCE                            POSITION(      20:      26)
+   DECIMAL
+   )

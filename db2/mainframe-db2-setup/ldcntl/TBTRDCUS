@@ -1,0 +1,12 @@
+  LOAD DATA LOG NO REPLACE INDDN SYSREC00 INTO TABLE
+      TRADE.TBTRDCUS
+   (
+   CUS_CUSTOMER_ID                        POSITION(       1         )
+   CHAR(                     12)                ,
+   CUS_CURRENCY                           POSITION(      13         )
+   CHAR(                      3)                ,
+   CUS_DESCRIPTION                        POSITION(      16         )
+   CHAR(                     40)                ,
+   CUS_STATUS                             POSITION(      56         )
+   CHAR(                      1)
+   )

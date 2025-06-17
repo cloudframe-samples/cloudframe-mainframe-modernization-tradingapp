@@ -1,0 +1,16 @@
+  LOAD DATA LOG NO REPLACE INDDN SYSREC00 INTO TABLE
+      TRADE.TBTRDSEC
+   (
+   SEC_FIGI                               POSITION(       1         )
+   CHAR(                     12)                ,
+   SEC_CURRENCY                           POSITION(      13         )
+   CHAR(                      3)                ,
+   SEC_DESCRIPTION                        POSITION(      16         )
+   CHAR(                     40)                ,
+   SEC_SYMBOL                             POSITION(      56         )
+   CHAR(                     20)                ,
+   SEC_SHARE_CLASS_FIGI                   POSITION(      76         )
+   CHAR(                     12)                ,
+   SEC_TYPE                               POSITION(      88         )
+   CHAR(                     20)
+   )

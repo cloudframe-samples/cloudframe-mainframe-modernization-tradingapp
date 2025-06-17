@@ -1,0 +1,83 @@
+    CREATE TABLESPACE TSTRDORD IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 NUMPARTS 10
+                 DSSIZE 4G
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+                 BUFFERPOOL BP0
+                 LOCKSIZE ROW
+                 LOCKMAX 0
+                 CCSID EBCDIC
+                 MAXROWS 255
+                 CLOSE YES
+                 SEGSIZE 64
+    ;
+    ;
+    CREATE TABLE  TRADE.TBTRDORD
+     (
+        ORD_TRADING_XCHNG     CHAR(10)       NOT NULL WITH DEFAULT
+      , ORD_TRADEID           CHAR(12)       NOT NULL WITH DEFAULT
+      , ORD_BUY_SELL_IND      CHAR(1)        NOT NULL WITH DEFAULT
+      , ORD_CUSTOMER_ID       CHAR(12)       NOT NULL WITH DEFAULT
+      , ORD_FIGI              CHAR(12)       NOT NULL WITH DEFAULT
+      , ORD_QUANTITY          DECIMAL(9,2)   NOT NULL
+      , ORD_CURRENCY          CHAR(3)        NOT NULL WITH DEFAULT
+      , ORD_AMOUNT            DECIMAL(9,2)   NOT NULL
+      , ORD_STATUS            CHAR(3)        NOT NULL WITH DEFAULT
+     )
+       IN DBTRADEB.TSTRDORD
+       AUDIT NONE
+       CCSID EBCDIC
+       PARTITION BY RANGE(ORD_CURRENCY)
+       (
+         PARTITION 1    ENDING AT ( 'CAD' ),
+         PARTITION 2    ENDING AT ( 'CHF' ),
+         PARTITION 3    ENDING AT ( 'CNY' ),
+         PARTITION 4    ENDING AT ( 'EUR' ),
+         PARTITION 5    ENDING AT ( 'GBX' ),
+         PARTITION 6    ENDING AT ( 'INR' ),
+         PARTITION 7    ENDING AT ( 'JPY' ),
+         PARTITION 8    ENDING AT ( 'KRW' ),
+         PARTITION 9    ENDING AT ( 'MXN' ),
+         PARTITION 10   ENDING AT (MAXVALUE)
+       )
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDORD
+           ON TRADE.TBTRDORD
+         ( ORD_CURRENCY         ASC
+          ,ORD_TRADING_XCHNG      ASC
+          ,ORD_TRADEID          ASC
+          ,ORD_FIGI             ASC
+          ,ORD_BUY_SELL_IND     ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;
+    CREATE INDEX TRADE.X2TRDORD
+           ON TRADE.TBTRDORD
+         ( ORD_CURRENCY         ASC
+          ,ORD_STATUS           ASC
+          ,ORD_AMOUNT           ASC )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

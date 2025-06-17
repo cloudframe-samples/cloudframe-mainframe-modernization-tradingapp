@@ -1,0 +1,14 @@
+  LOAD DATA LOG NO REPLACE INDDN SYSREC00 INTO TABLE
+      TRADE.TBTRDMAC
+   (
+   MAC_CURRENCY                           POSITION(       1         )
+   CHAR(                      3)                ,
+   MAC_NUMBER                             POSITION(       4         )
+   INTEGER                                      ,
+   MAC_CUSTOMER_ID                        POSITION(       8         )
+   CHAR(                     12)                ,
+   MAC_BALANCE                            POSITION(      20:      26)
+   DECIMAL                                      ,
+   MAC_STATUS                             POSITION(      27         )
+   CHAR(                      1)
+   )

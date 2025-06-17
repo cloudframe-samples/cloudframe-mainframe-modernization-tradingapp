@@ -1,0 +1,43 @@
+    CREATE TABLESPACE TSTRDEXC IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 PRIQTY 100
+                 SECQTY 100
+                 ERASE NO
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+           BUFFERPOOL BP0
+           LOCKSIZE PAGE
+           LOCKMAX 0
+           CCSID EBCDIC
+           MAXROWS 255
+           CLOSE YES
+           SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDEXC
+     (
+        EXC_ID                INT NOT NULL GENERATED ALWAYS AS IDENTITY
+      , EXC_TYPE              CHAR(20)       NOT NULL WITH DEFAULT
+      , EXC_DESCRIPTION       VARCHAR(1000)  NOT NULL WITH DEFAULT
+     )
+       IN DBTRADEB.TSTRDEXC
+       AUDIT NONE
+       CCSID EBCDIC
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDEXC
+           ON TRADE.TBTRDEXC
+         ( EXC_ID               ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

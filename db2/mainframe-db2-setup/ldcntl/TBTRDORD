@@ -1,0 +1,22 @@
+  LOAD DATA LOG NO REPLACE INDDN SYSREC00 INTO TABLE
+      TRADE.TBTRDORD
+   (
+   ORD_TRADING_XCHNG                      POSITION(       1         )
+   CHAR(                     10)                ,
+   ORD_TRADEID                            POSITION(      11         )
+   CHAR(                     12)                ,
+   ORD_BUY_SELL_IND                       POSITION(      23         )
+   CHAR(                      1)                ,
+   ORD_CUSTOMER_ID                        POSITION(      24         )
+   CHAR(                     12)                ,
+   ORD_FIGI                               POSITION(      36         )
+   CHAR(                     12)                ,
+   ORD_QUANTITY                           POSITION(      48:      52)
+   DECIMAL                                      ,
+   ORD_CURRENCY                           POSITION(      53         )
+   CHAR(                      3)                ,
+   ORD_AMOUNT                             POSITION(      56:      60)
+   DECIMAL                                      ,
+   ORD_STATUS                             POSITION(      61         )
+   CHAR(                      3)
+   )

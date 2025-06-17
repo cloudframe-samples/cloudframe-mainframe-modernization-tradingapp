@@ -1,0 +1,44 @@
+    CREATE TABLESPACE TSTRDCUS IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 PRIQTY 5000
+                 SECQTY 1000
+                 ERASE NO
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+           BUFFERPOOL BP0
+           LOCKSIZE PAGE
+           LOCKMAX 0
+           CCSID EBCDIC
+           MAXROWS 255
+           CLOSE YES
+           SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDCUS
+     (
+        CUS_CUSTOMER_ID       CHAR(12)       NOT NULL WITH DEFAULT
+      , CUS_CURRENCY          CHAR(3)        NOT NULL WITH DEFAULT
+      , CUS_DESCRIPTION       CHAR(40)       NOT NULL WITH DEFAULT
+      , CUS_STATUS            CHAR(1)        NOT NULL WITH DEFAULT
+     )
+       IN DBTRADEB.TSTRDCUS
+       AUDIT NONE
+       CCSID EBCDIC
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDCUS
+           ON TRADE.TBTRDCUS
+         ( CUS_CUSTOMER_ID      ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

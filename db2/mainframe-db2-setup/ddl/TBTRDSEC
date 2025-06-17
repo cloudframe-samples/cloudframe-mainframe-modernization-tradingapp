@@ -1,0 +1,62 @@
+    CREATE TABLESPACE TSTRDSEC IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 PRIQTY 50000
+                 SECQTY 10000
+                 ERASE NO
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+           BUFFERPOOL BP0
+           LOCKSIZE PAGE
+           LOCKMAX 0
+           CCSID EBCDIC
+           MAXROWS 255
+           CLOSE YES
+           SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDSEC
+     (
+        SEC_FIGI              CHAR(12)       NOT NULL WITH DEFAULT
+      , SEC_CURRENCY          CHAR(3)        NOT NULL WITH DEFAULT
+      , SEC_DESCRIPTION       CHAR(40)       NOT NULL WITH DEFAULT
+      , SEC_SYMBOL            CHAR(20)       NOT NULL WITH DEFAULT
+      , SEC_SHARE_CLASS_FIGI  CHAR(12)       NOT NULL WITH DEFAULT
+      , SEC_TYPE              CHAR(20)       NOT NULL WITH DEFAULT
+     )
+       IN DBTRADEB.TSTRDSEC
+       AUDIT NONE
+       CCSID EBCDIC
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDSEC
+           ON TRADE.TBTRDSEC
+         ( SEC_FIGI             ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    4800
+           SECQTY    4800
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;
+    CREATE INDEX TRADE.X2TRDSEC
+           ON TRADE.TBTRDSEC
+         ( SEC_CURRENCY         ASC
+          ,SEC_FIGI             ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    4800
+           SECQTY    4800
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;

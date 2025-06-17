@@ -1,0 +1,49 @@
+    CREATE TABLESPACE TSTRDSUM IN DBTRADEB
+           USING STOGROUP CLFRSTG
+                 PRIQTY 500
+                 SECQTY 100
+                 ERASE NO
+                 FREEPAGE   3
+                 PCTFREE 10
+                 GBPCACHE CHANGED
+                 TRACKMOD YES
+           BUFFERPOOL BP0
+           LOCKSIZE ROW
+           LOCKMAX 0
+           CCSID EBCDIC
+           MAXROWS 255
+           CLOSE YES
+           SEGSIZE 64
+    ;
+    CREATE TABLE  TRADE.TBTRDSUM
+     (
+        SUM_CUSTOMER_ID       CHAR(12)       NOT NULL WITH DEFAULT
+      , SUM_OVERDUE           INTEGER        NOT NULL
+      , SUM_REJECTED          INTEGER        NOT NULL
+      , SUM_SETTLED           INTEGER        NOT NULL
+      , SUM_CURRENCY          CHAR(3)        NOT NULL WITH DEFAULT
+      , SUM_OPEN_BALANCE      DECIMAL(12,2)  NOT NULL
+      , SUM_TOTAL_DEBIT       DECIMAL(12,2)  NOT NULL
+      , SUM_TOTAL_CREDIT      DECIMAL(12,2)  NOT NULL
+      , SUM_CLOSE_BALANCE     DECIMAL(12,2)  NOT NULL
+     )
+       IN DBTRADEB.TSTRDSUM
+       AUDIT NONE
+       CCSID EBCDIC
+    ;
+    CREATE UNIQUE INDEX TRADE.X1TRDSUM
+           ON TRADE.TBTRDSUM
+         ( SUM_CUSTOMER_ID      ASC  )
+           USING STOGROUP CLFRSTG
+           PRIQTY    480
+           SECQTY    480
+           ERASE NO
+           FREEPAGE  10
+           PCTFREE 10
+           GBPCACHE CHANGED
+           CLUSTER
+           BUFFERPOOL BP0
+           CLOSE YES
+           PIECESIZE 2       G
+           COPY NO
+    ;
