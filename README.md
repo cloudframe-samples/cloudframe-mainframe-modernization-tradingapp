@@ -1,6 +1,6 @@
-**Batch Securities Trade Settlement Application**
+# Batch Securities Trade Settlement Application
 
-# Application Overview
+**Application Overview**
 
 This application simulates International Securities trading activity using 10 currencies. It accepts, matches & settles Buy/Sell requests. The currencies used in this application are:
 
