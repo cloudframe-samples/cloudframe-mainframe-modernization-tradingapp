@@ -1,4 +1,4 @@
-Securities Trade Settlement Application
+**Batch Securities Trade Settlement Application**
 
 # Application Overview
 
@@ -31,7 +31,7 @@ It is essential that for each currency, the ACCP\* job is successfully completed
 ![Batch Securities Trade Settlement Application ](images/image1.jpg)
 
 
-**Batch Securities Trade Settlement Application**
+
 
 **Acceptance Processing**
 
@@ -49,28 +49,8 @@ As in the acceptance stage, the settlement stage also has 10 jobs corresponding 
 
 There are two jobs which produce reports based on the acceptance and settlement jobs above. The first one generates 3 reports. This job is EXECRPT and the reports are Run log, Summary report and Exception report.
 
-EXECRPT
-
-RUNPARM
-
-EXECRPT
-
-TRDPROC
-
-RUNLOG, SUMMARY, EXCPTION
-
-TRDP004
+![](images/image4.jpg)
 
 And the other job is called TRADERPT and generates an order report.
 
-TRADERPT
-
-RUNPARM
-
-TRADERPT
-
-TRDPROC
-
-REPORDER
-
-TRADERPT
+![](images/image5.jpg)
