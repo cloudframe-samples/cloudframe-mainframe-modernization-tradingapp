@@ -35,37 +35,13 @@ It is essential that for each currency, the ACCP\* job is successfully completed
 
 **Acceptance Processing**
 
-ACCP\*
-
-RUNPARM
-
-TRDPROC
-
-ACCP\* JOBS
-
-MSTPB001
-
-TRDP000
-
-MSTPB002
+![](images/image2.jpg)
 
 The acceptance stage of the processing of trade request consists of 10 jobs – one for each currency. These jobs execute the procedure TRDPROC, which is a common PROC that receives parameters from the JCL and executes the appropriate program. For all the acceptance jobs, the PROC executes TRDP000 which, in turn, calls MSTPB001 and MSTPB002.
 
 **Settlement Processing**
 
-SETL\*
-
-RUNPARM
-
-TRDPROC
-
-SETL\* JOBS
-
-TRDPB002
-
-TRDPB001
-
-TRDPB003
+![](images/image3.jpg)
 
 As in the acceptance stage, the settlement stage also has 10 jobs corresponding to the 10 currencies being processed. These jobs call the same PROC as in the acceptance stage with different parameters based on which the program called is TRDPB001. This program, in turn, calls TRDPB002 and TRDPB003. TRDPB002 updates the securities account while TRDPB003 updates the money accounts.
 
