@@ -62,7 +62,8 @@ Once a trade request is accepted, the corresponding `SETL*` job updates the acco
 
 - **COBOL**
 - **JCL**
-- **VSAM**
+- **Db2**
+- **QSAM Files**
 - **Mainframe Utilities**
 - **CodeNavigator** (for modernization analysis and transformation)
 
