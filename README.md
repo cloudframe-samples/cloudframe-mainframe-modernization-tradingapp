@@ -1,56 +1,114 @@
-# Batch Securities Trade Settlement Application
 
-**Application Overview**
+# 🏦 TradingApp – Batch Securities Trade Settlement Application
 
-This application simulates International Securities trading activity using 10 currencies. It accepts, matches & settles Buy/Sell requests. The currencies used in this application are:
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+![Mainframe](https://img.shields.io/badge/mainframe-modernization-brightgreen)
+![Built With](https://img.shields.io/badge/built%20with-COBOL%2C%20JCL%2C%20VSAM-orange)
 
-CAD - Canadian Dollar
+## 📘 Overview
 
-CHF - Swiss Franc
+**TradingApp** is a reference mainframe application created to simulate real-world international securities trading workflows across **10 currencies**. It demonstrates how batch workloads, written in COBOL and JCL, can be analyzed and modernized using **CodeNavigator** — a platform that helps transform legacy mainframe programs into modern **Java**, **Spring Boot**, and **Spring Batch** applications.
 
-CNY - Chinese Yuan Renminbi
+The application covers the full trade lifecycle:
+- **Matching Buy/Sell Requests**
+- **Settlement Processing**
+- **Account Balance Updates**
+- **Trade and Exception Report Generation**
 
-EUR - Euro
+This application is designed to provide modernization tooling vendors, system integrators, and developers a realistic and complex workload to analyze, transform, and validate.
 
-GBX - British Pound
+![Overall Batch Flow](images/image1.jpg)
+---
 
-INR - Indian Rupee
+## 🌍 Supported Currencies
 
-JPY - Japanese Yen
+- CAD – Canadian Dollar  
+- CHF – Swiss Franc  
+- CNY – Chinese Yuan Renminbi  
+- EUR – Euro  
+- GBX – British Pound  
+- INR – Indian Rupee  
+- JPY – Japanese Yen  
+- KRW – Korean Won  
+- MXN – Mexican Peso  
+- USD – US Dollar
 
-KRW - Korean Won
+---
 
-MXN - Mexican Peso
+## 🧱 Architecture
 
-USD - US Dollar
+The application's batch flow consists of three main phases:
 
-The application processes requests and updates the respective accounts once the trades are completed. The diagram below depicts the flow of jobs that will accomplish the task of processing the matching buy/sell requests and accepting the matched requests as the first phase shown within the pink box below. The second phase consists of the trading settlement jobs shown in the amber box. Finally, there are two report generation jobs, one of which produces the exception reports while the other one produces the trade report. These are represented within the green box.
+### 1. **Acceptance Processing**
+Each currency has a corresponding `ACCP*` job that validates and matches incoming Buy/Sell requests. These jobs invoke a common COBOL procedure: `TRDPROC`.
 
-It is essential that for each currency, the ACCP\* job is successfully completed before running the SETL\* job for that currency. 
+![Acceptance Flow](images/image2.jpg)
 
-![Batch Securities Trade Settlement Application ](images/image1.jpg)
+### 2. **Settlement Processing**
+Once a trade request is accepted, the corresponding `SETL*` job updates the account balances. Each settlement job must run **after** the associated acceptance job for the same currency.
+
+![Settlement Flow](images/image3.jpg)
+
+### 3. **Reporting**
+- **Exception Report Job**: Highlights failed or mismatched trades.
+- **Trade Report Job**: Summarizes successful transactions.
+
+![Exception Flow Flow](images/image4.jpg)
+![Trade Report Flow](images/image5.jpg)
+
+---
+
+## 🛠️ Technologies Used
+
+- **COBOL**
+- **JCL**
+- **VSAM**
+- **Mainframe Utilities**
+- **CodeNavigator** (for modernization analysis and transformation)
+
+---
+
+## 🚀 Modernization with CodeNavigator
+
+This application serves as a benchmark for running your COBOL-to-Java transformation journeys using **CodeNavigator**. You can plug this into your CI/CD pipelines, run transformation tools, and test output fidelity by comparing Java job orchestration against the legacy behavior.
+
+---
+
+## 📁 Repository Structure
+
+```plaintext
+├── jcl/                # JCL job control files
+├── cobol/              # COBOL source programs
+├── procs/              # Shared procedures (e.g., TRDPROC)
+├── reports/            # Output report definitions
+├── images/             # Architecture diagrams and job flows
+└── README.md           # This file
+```
+
+---
+
+## 📌 Notes
+
+> For demonstration purposes, this application may intentionally include non-uniform coding patterns, reused control logic, and shared job procs. These are intended to reflect common real-world legacy system designs and are useful for exercising various modernization scenarios.
+
+---
+
+## 📝 License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+You are free to use, modify, and distribute this code in compliance with the license terms. For more details, refer to the full [LICENSE](LICENSE) file in this repository.
+---
 
 
+## 🔗 Related Tools
 
+- [CodeNavigator](https://www.cloudframe.com/codenavigator) – Mainframe to Java transformation toolkit.
+- [VS Code COBOL Plugin](https://marketplace.visualstudio.com/items?itemName=Bitlang.cobol)
 
-**Acceptance Processing**
+---
 
-![](images/image2.jpg)
+## 👥 Contributors
 
-The acceptance stage of the processing of trade request consists of 10 jobs – one for each currency. These jobs execute the procedure TRDPROC, which is a common PROC that receives parameters from the JCL and executes the appropriate program. For all the acceptance jobs, the PROC executes TRDP000 which, in turn, calls MSTPB001 and MSTPB002.
+Maintained by the CloudFrame modernization team. For questions or support, please contact: [support@cloudframe.com](mailto:support@cloudframe.com)
 
-**Settlement Processing**
-
-![](images/image3.jpg)
-
-As in the acceptance stage, the settlement stage also has 10 jobs corresponding to the 10 currencies being processed. These jobs call the same PROC as in the acceptance stage with different parameters based on which the program called is TRDPB001. This program, in turn, calls TRDPB002 and TRDPB003. TRDPB002 updates the securities account while TRDPB003 updates the money accounts.
-
-**Reports Generation**
-
-There are two jobs which produce reports based on the acceptance and settlement jobs above. The first one generates 3 reports. This job is EXECRPT and the reports are Run log, Summary report and Exception report.
-
-![](images/image4.jpg)
-
-And the other job is called TRADERPT and generates an order report.
-
-![](images/image5.jpg)
