@@ -13,6 +13,7 @@ The application covers the full trade lifecycle:
 
 This application is designed to provide modernization tooling vendors, system integrators, and developers a realistic and complex workload to analyze, transform, and validate.
 
+![Overall Batch Flow](images/image1.jpg)
 ---
 
 ## 🌍 Supported Currencies
@@ -42,11 +43,14 @@ Each currency has a corresponding `ACCP*` job that validates and matches incomin
 ### 2. **Settlement Processing**
 Once a trade request is accepted, the corresponding `SETL*` job updates the account balances. Each settlement job must run **after** the associated acceptance job for the same currency.
 
+![Settlement Flow](images/image3.jpg)
+
 ### 3. **Reporting**
 - **Exception Report Job**: Highlights failed or mismatched trades.
 - **Trade Report Job**: Summarizes successful transactions.
 
-![Overall Batch Flow](images/image1.jpg)
+![Exception Flow Flow](images/image4.jpg)
+![Trade Report Flow](images/image5.jpg)
 
 ---
 
