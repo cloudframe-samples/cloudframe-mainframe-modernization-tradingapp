@@ -87,6 +87,14 @@ This application serves as a benchmark for running your COBOL-to-Java transforma
 
 ---
 
+## 🚀 How to Run on Mainframe
+
+You can execute this application on a mainframe environment (such as IBM z/OS or ZD&T). The steps include JCL submission, COBOL compilation, and running settlement batch jobs across currencies.
+
+📖 A complete walkthrough is available here: [Execution Guide](docs/Mainframe_EXECUTION_GUIDE.md)
+
+🎥 Coming Soon: We’re working on a short video walkthrough to visually demonstrate this flow.
+
 ## 📌 Notes
 
 > For demonstration purposes, this application may intentionally include non-uniform coding patterns, reused control logic, and shared job procs. These are intended to reflect common real-world legacy system designs and are useful for exercising various modernization scenarios.
