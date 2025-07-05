@@ -74,19 +74,6 @@ This application serves as a benchmark for running your COBOL-to-Java transforma
 
 ---
 
-## 📁 Repository Structure
-
-```plaintext
-├── jcl/                # JCL job control files
-├── cobol/              # COBOL source programs
-├── procs/              # Shared procedures (e.g., TRDPROC)
-├── reports/            # Output report definitions
-├── images/             # Architecture diagrams and job flows
-└── README.md           # This file
-```
-
----
-
 ## 🚀 How to Run on Mainframe
 
 You can execute this application on a mainframe environment (such as IBM z/OS or ZD&T). The steps include JCL submission, COBOL compilation, and running settlement batch jobs across currencies.
@@ -94,6 +81,27 @@ You can execute this application on a mainframe environment (such as IBM z/OS or
 📖 A complete walkthrough is available here: [Execution Guide](docs/Mainframe_EXECUTION_GUIDE.md)
 
 🎥 Coming Soon: We’re working on a short video walkthrough to visually demonstrate this flow.
+---
+
+
+## 📁 Repository Structure
+
+```plaintext
+├── cobol/               # COBOL source programs (e.g., TRDPB001–TRDPBEXC)
+├── compiler-listings/   # Compile output listings
+├── controlcard/         # Control cards used in batch processing
+├── db2/                 # DB2-related setup and output samples
+├── docs/                # Documentation files (e.g., EXECUTION_GUIDE.md)
+├── images/              # Flow diagrams and architecture visuals
+├── jcl/                 # JCL job control files
+├── metadata/            # Metadata definitions or config data
+├── output/              # Sample report outputs
+├── proc/                # Shared JCL procedures (e.g., TRDPROC)
+├── LICENSE              # Apache 2.0 License
+└── README.md            # Project overview and instructions
+```
+
+---
 
 ## 📌 Notes
 
@@ -106,6 +114,13 @@ You can execute this application on a mainframe environment (such as IBM z/OS or
 This project is licensed under the [Apache License 2.0](LICENSE).
 
 You are free to use, modify, and distribute this code in compliance with the license terms. For more details, refer to the full [LICENSE](LICENSE) file in this repository.
+
+---
+
+## 👥 Contributors
+
+Maintained by the CloudFrame modernization team. For questions or support, please contact: [support@cloudframe.com](mailto:support@cloudframe.com)
+
 ---
 
 
@@ -113,10 +128,4 @@ You are free to use, modify, and distribute this code in compliance with the lic
 
 - [CodeNavigator](https://www.cloudframe.com/codenavigator) – Mainframe to Java transformation toolkit.
 - [VS Code COBOL Plugin](https://marketplace.visualstudio.com/items?itemName=Bitlang.cobol)
-
----
-
-## 👥 Contributors
-
-Maintained by the CloudFrame modernization team. For questions or support, please contact: [support@cloudframe.com](mailto:support@cloudframe.com)
 
