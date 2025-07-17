@@ -7,7 +7,7 @@
 
 ## 📘 Overview
 
-**TradingApp** is a reference mainframe application created to simulate real-world international securities trading workflows across **10 currencies**. It demonstrates how batch workloads, written in COBOL and JCL, can be analyzed and modernized using **CodeNavigator** — a platform that helps transform legacy mainframe programs into modern **Java**, **Spring Boot**, and **Spring Batch** applications.
+**TradingApp** is a reference mainframe application created to simulate real-world international securities trading workflows across **10 currencies**. It demonstrates how batch workloads, written in COBOL and JCL, can be analyzed with **Atlas** and modernized with **CodeNavigator**. These two products are part of the CloudFrame Modernization Suite. Atlas helps recover deep understanding and lost tribal knowledge, issues faced by organizations using decades old COBOL applications and losing expertise due to SME attrition. CodeNavigator then enables modernization by transforming legacy mainframe programs into modern **Java**, **Spring Boot**, and **Spring Batch** applications or blueprinting new applications based on Atlas discovery and business needs.
 
 The application covers the full trade lifecycle:
 - **Matching Buy/Sell Requests**
